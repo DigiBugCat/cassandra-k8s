@@ -1,0 +1,5 @@
+# Production overrides
+
+sealedSecrets:
+  cloudflaredTunnel:
+    token: ""  # will be sealed after terraform creates the portal tunnel

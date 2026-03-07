@@ -1,0 +1,185 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: portal-html
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cassandra Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{--bg-0:#08070b;--bg-1:#0e0d13;--bg-2:#15141b;--bg-3:#1d1c24;--bg-4:#25242e;--border:#2e2d38;--border-active:#454359;--text-0:#f0eef8;--text-1:#c4c0d4;--text-2:#8a86a0;--text-3:#5c586e;--purple:#9b7cf8;--purple-soft:rgba(155,124,248,0.1);--green:#4ade80;--green-soft:rgba(74,222,128,0.1);--red:#fb7185;--red-soft:rgba(251,113,133,0.1);--amber:#fbbf24;--amber-soft:rgba(251,191,36,0.08);--top-bar:44px}
+    body{font-family:'Sora',sans-serif;background:var(--bg-0);color:var(--text-0);min-height:100vh;font-size:13px}
+    .topbar{height:var(--top-bar);background:var(--bg-1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:24px;position:sticky;top:0;z-index:20}
+    .topbar-brand{font-size:14px;font-weight:600;color:var(--purple);letter-spacing:-0.01em;display:flex;align-items:center;gap:8px}
+    .topbar-brand .dot{width:6px;height:6px;background:var(--purple);border-radius:50%;box-shadow:0 0 8px var(--purple)}
+    .topbar-nav{display:flex;gap:2px;flex:1}
+    .topbar-tab{padding:8px 16px;border-radius:6px;color:var(--text-2);font-size:12.5px;font-weight:400;cursor:pointer;transition:all .12s;text-decoration:none}
+    .topbar-tab:hover{background:var(--bg-3);color:var(--text-1)}
+    .topbar-tab.active{background:var(--purple-soft);color:var(--purple);font-weight:500}
+    .topbar-user{font-size:11.5px;color:var(--text-3);display:flex;align-items:center;gap:8px}
+    .topbar-user .avatar{width:24px;height:24px;border-radius:50%;background:var(--bg-4);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--text-1)}
+    .layout{padding:20px;max-width:1400px;margin:0 auto}
+    .page{display:none}.page.active{display:block}
+    .services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-bottom:20px}
+    .service-card{background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:20px;transition:border-color .15s;cursor:pointer;text-decoration:none;color:inherit;display:block}
+    .service-card:hover{border-color:var(--border-active)}
+    .service-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .service-name{font-size:14px;font-weight:600}
+    .service-badge{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:500}
+    .service-badge.up{background:var(--green-soft);color:var(--green)}
+    .service-badge.down{background:var(--red-soft);color:var(--red)}
+    .service-badge.unknown{background:var(--bg-4);color:var(--text-3)}
+    .service-desc{font-size:12px;color:var(--text-2);margin-bottom:12px;line-height:1.5}
+    .service-url{font-family:'Geist Mono',monospace;font-size:11px;color:var(--text-3);background:var(--bg-3);padding:4px 8px;border-radius:4px;display:inline-block}
+    .panel{background:var(--bg-2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+    .panel-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    .panel-title{font-size:12px;font-weight:500;color:var(--text-1)}
+    .embed-frame{width:100%;border:none;min-height:calc(100vh - 120px);background:var(--bg-0)}
+    .dash-top{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+    .metric{background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:6px}
+    .metric-top{display:flex;justify-content:space-between;align-items:center}
+    .metric-label{font-size:11px;font-weight:400;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em}
+    .metric-badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500}
+    .metric-badge.up{background:var(--green-soft);color:var(--green)}
+    .metric-value{font-size:28px;font-weight:600;letter-spacing:-0.02em;line-height:1}
+    .metric-sub{font-size:11px;color:var(--text-3)}
+    @media(max-width:768px){.dash-top{grid-template-columns:repeat(2,1fr)}.services-grid{grid-template-columns:1fr}}
+    </style>
+    </head>
+    <body>
+    <header class="topbar">
+      <div class="topbar-brand"><span class="dot"></span>Cassandra</div>
+      <nav class="topbar-nav">
+        <a class="topbar-tab active" data-page="dashboard">Dashboard</a>
+        <a class="topbar-tab" data-page="grafana">Grafana</a>
+        <a class="topbar-tab" data-page="argocd">ArgoCD</a>
+      </nav>
+      <div class="topbar-user">
+        <div class="avatar">?</div>
+        <span id="user-email">authenticated</span>
+      </div>
+    </header>
+    <div class="layout">
+      <!-- Dashboard -->
+      <div class="page active" id="page-dashboard">
+        <div class="dash-top">
+          <div class="metric">
+            <div class="metric-top"><span class="metric-label">Runner</span><span class="metric-badge unknown" id="runner-badge">checking</span></div>
+            <div class="metric-value" style="font-size:16px;margin-top:6px" id="runner-status">...</div>
+            <div class="metric-sub">claude-runner.REDACTED_DOMAIN</div>
+          </div>
+          <div class="metric">
+            <div class="metric-top"><span class="metric-label">Grafana</span><span class="metric-badge unknown" id="grafana-badge">checking</span></div>
+            <div class="metric-value" style="font-size:16px;margin-top:6px" id="grafana-status">...</div>
+            <div class="metric-sub">/grafana/</div>
+          </div>
+          <div class="metric">
+            <div class="metric-top"><span class="metric-label">ArgoCD</span><span class="metric-badge unknown" id="argocd-badge">checking</span></div>
+            <div class="metric-value" style="font-size:16px;margin-top:6px" id="argocd-status">...</div>
+            <div class="metric-sub">/argocd/</div>
+          </div>
+          <div class="metric">
+            <div class="metric-top"><span class="metric-label">Tunnel</span><span class="metric-badge up">active</span></div>
+            <div class="metric-value" style="font-size:14px;margin-top:6px">Cloudflare</div>
+            <div class="metric-sub">Zero Trust Access</div>
+          </div>
+        </div>
+        <div class="services-grid">
+          <a href="/grafana/" class="service-card">
+            <div class="service-header"><span class="service-name">Grafana</span><span class="service-badge unknown" id="grafana-card-badge">-</span></div>
+            <div class="service-desc">Monitoring dashboards — VictoriaMetrics, VictoriaLogs, session metrics</div>
+            <span class="service-url">/grafana/</span>
+          </a>
+          <a href="/argocd/" class="service-card">
+            <div class="service-header"><span class="service-name">ArgoCD</span><span class="service-badge unknown" id="argocd-card-badge">-</span></div>
+            <div class="service-desc">GitOps deployment — sync status, application health, rollout history</div>
+            <span class="service-url">/argocd/</span>
+          </a>
+          <a href="/runner/health" class="service-card" target="_blank">
+            <div class="service-header"><span class="service-name">Runner API</span><span class="service-badge unknown" id="runner-card-badge">-</span></div>
+            <div class="service-desc">Claude agent orchestrator — session management, warm pool, WebSocket</div>
+            <span class="service-url">/runner/</span>
+          </a>
+          <a href="https://dash.cloudflare.com" class="service-card" target="_blank">
+            <div class="service-header"><span class="service-name">Cloudflare</span></div>
+            <div class="service-desc">DNS, tunnels, WAF, Access policies, service tokens</div>
+            <span class="service-url">dash.cloudflare.com</span>
+          </a>
+        </div>
+      </div>
+      <!-- Grafana embed -->
+      <div class="page" id="page-grafana">
+        <iframe src="/grafana/" class="embed-frame" id="grafana-frame"></iframe>
+      </div>
+      <!-- ArgoCD embed -->
+      <div class="page" id="page-argocd">
+        <iframe src="/argocd/" class="embed-frame" id="argocd-frame"></iframe>
+      </div>
+    </div>
+    <script>
+    // Nav
+    document.querySelectorAll('.topbar-tab').forEach(t=>{
+      t.addEventListener('click',()=>{
+        document.querySelectorAll('.topbar-tab').forEach(x=>x.classList.remove('active'));
+        t.classList.add('active');
+        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+        document.getElementById('page-'+t.dataset.page).classList.add('active');
+      });
+    });
+
+    // User info from CF Access JWT
+    try{
+      const jwt=document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('CF_Authorization='));
+      if(jwt){
+        const payload=JSON.parse(atob(jwt.split('=')[1].split('.')[1]));
+        document.getElementById('user-email').textContent=payload.email||'unknown';
+        document.querySelector('.avatar').textContent=(payload.email||'?')[0].toUpperCase();
+      }
+    }catch(e){}
+
+    // Health checks
+    async function checkHealth(){
+      // Runner
+      try{
+        const r=await fetch('/runner/health',{signal:AbortSignal.timeout(5000)});
+        const ok=r.ok;
+        setBadge('runner',ok);
+        document.getElementById('runner-status').textContent=ok?'Operational':'Degraded';
+      }catch(e){setBadge('runner',false);document.getElementById('runner-status').textContent='Unreachable'}
+
+      // Grafana
+      try{
+        const r=await fetch('/grafana/api/health',{signal:AbortSignal.timeout(5000)});
+        setBadge('grafana',r.ok);
+        document.getElementById('grafana-status').textContent=r.ok?'Operational':'Degraded';
+      }catch(e){setBadge('grafana',false);document.getElementById('grafana-status').textContent='Unreachable'}
+
+      // ArgoCD
+      try{
+        const r=await fetch('/argocd/api/version',{signal:AbortSignal.timeout(5000)});
+        setBadge('argocd',r.ok);
+        document.getElementById('argocd-status').textContent=r.ok?'Operational':'Degraded';
+      }catch(e){setBadge('argocd',false);document.getElementById('argocd-status').textContent='Unreachable'}
+    }
+
+    function setBadge(name,ok){
+      const cls=ok?'up':'down';
+      const txt=ok?'healthy':'down';
+      [name+'-badge',name+'-card-badge'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el){el.className='service-badge '+cls;el.textContent=txt}
+      });
+    }
+
+    checkHealth();
+    setInterval(checkHealth,30000);
+    </script>
+    </body>
+    </html>
