@@ -42,9 +42,9 @@ persistence:
 service:
   type: NodePort
   httpPort: 8080
-  httpNodePort: 9080
+  httpNodePort: 30080
   wsPort: 8081
-  wsNodePort: 9081
+  wsNodePort: 30081
 
 cloudflaredTunnel:
   enabled: false

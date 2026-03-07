@@ -31,8 +31,8 @@ persistence:
 
 service:
   type: NodePort
-  httpNodePort: 9080
-  wsNodePort: 9081
+  httpNodePort: 30180
+  wsNodePort: 30181
 
 obsidian:
   enabled: false
