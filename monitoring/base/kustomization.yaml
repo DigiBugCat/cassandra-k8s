@@ -9,3 +9,4 @@ resources:
   - victoria-logs.yaml
   - vector.yaml
   - grafana.yaml
+  - grafana-dashboards.yaml

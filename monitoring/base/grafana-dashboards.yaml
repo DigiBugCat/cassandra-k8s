@@ -1,0 +1,375 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-provider
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: default
+        orgId: 1
+        folder: ""
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /etc/grafana/dashboards
+          foldersFromFilesStructure: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+data:
+  orchestrator.json: |
+    {
+      "uid": "orchestrator-overview",
+      "title": "Orchestrator Overview",
+      "tags": ["cassandra"],
+      "timezone": "browser",
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" },
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "" },
+            "query": "label_values(api_requests_total, namespace)",
+            "current": { "text": "All", "value": "$__all" },
+            "includeAll": true,
+            "multi": false,
+            "refresh": 2
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "title": "API Request Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "datasource": { "type": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(rate(api_requests_total{namespace=~\"$namespace\"}[5m])) by (path, method)",
+              "legendFormat": "{{method}} {{path}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "custom": { "fillOpacity": 10, "lineWidth": 2 }
+            }
+          }
+        },
+        {
+          "id": 2,
+          "title": "Error Rate (non-2xx)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "datasource": { "type": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(rate(api_requests_total{namespace=~\"$namespace\", status!~\"2..\"}[5m])) by (path, status)",
+              "legendFormat": "{{status}} {{path}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "custom": { "fillOpacity": 10, "lineWidth": 2 },
+              "color": { "mode": "palette-classic" }
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "Request Latency p50 / p90 / p99",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "datasource": { "type": "prometheus" },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.50, sum(rate(api_request_duration_seconds_bucket{namespace=~\"$namespace\"}[5m])) by (le))",
+              "legendFormat": "p50"
+            },
+            {
+              "expr": "histogram_quantile(0.90, sum(rate(api_request_duration_seconds_bucket{namespace=~\"$namespace\"}[5m])) by (le))",
+              "legendFormat": "p90"
+            },
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(api_request_duration_seconds_bucket{namespace=~\"$namespace\"}[5m])) by (le))",
+              "legendFormat": "p99"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": { "fillOpacity": 5, "lineWidth": 2 }
+            }
+          }
+        },
+        {
+          "id": 4,
+          "title": "Sessions Created",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "datasource": { "type": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(rate(sessions_created_total{namespace=~\"$namespace\"}[5m])) by (namespace)",
+              "legendFormat": "{{namespace}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": { "fillOpacity": 10, "lineWidth": 2 }
+            }
+          }
+        },
+        {
+          "id": 5,
+          "title": "Total Requests by Status",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 24, "x": 0, "y": 16 },
+          "datasource": { "type": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(api_requests_total{namespace=~\"$namespace\"}) by (status)",
+              "legendFormat": "HTTP {{status}}"
+            }
+          ],
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name"
+          }
+        },
+        {
+          "id": 6,
+          "title": "Requests by Path",
+          "type": "piechart",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+          "datasource": { "type": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(api_requests_total{namespace=~\"$namespace\"}) by (path)",
+              "legendFormat": "{{path}}"
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "title": "Active Connections (Traefik)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+          "datasource": { "type": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(traefik_open_connections) by (entrypoint)",
+              "legendFormat": "{{entrypoint}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": { "fillOpacity": 15, "lineWidth": 2 }
+            }
+          }
+        }
+      ],
+      "schemaVersion": 39
+    }
+  system.json: |
+    {
+      "uid": "system-resources",
+      "title": "System Resources",
+      "tags": ["cassandra"],
+      "timezone": "browser",
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" },
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "" },
+            "query": "label_values(process_resident_memory_bytes, namespace)",
+            "current": { "text": "All", "value": "$__all" },
+            "includeAll": true,
+            "multi": false,
+            "refresh": 2
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Process RSS Memory",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "datasource": { "type": "prometheus" },
+          "targets": [
+            {
+              "expr": "process_resident_memory_bytes{namespace=~\"$namespace\"}",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": { "fillOpacity": 10, "lineWidth": 2 }
+            }
+          }
+        },
+        {
+          "id": 2,
+          "title": "Node.js Heap Used",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "datasource": { "type": "prometheus" },
+          "targets": [
+            {
+              "expr": "nodejs_heap_size_used_bytes{namespace=~\"$namespace\"}",
+              "legendFormat": "used — {{pod}}"
+            },
+            {
+              "expr": "nodejs_heap_size_total_bytes{namespace=~\"$namespace\"}",
+              "legendFormat": "total — {{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": { "fillOpacity": 10, "lineWidth": 2 }
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "Process CPU Usage",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "datasource": { "type": "prometheus" },
+          "targets": [
+            {
+              "expr": "rate(process_cpu_seconds_total{namespace=~\"$namespace\"}[5m])",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "custom": { "fillOpacity": 10, "lineWidth": 2 }
+            }
+          }
+        },
+        {
+          "id": 4,
+          "title": "Event Loop Lag",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "datasource": { "type": "prometheus" },
+          "targets": [
+            {
+              "expr": "nodejs_eventloop_lag_p50_seconds{namespace=~\"$namespace\"}",
+              "legendFormat": "p50 — {{pod}}"
+            },
+            {
+              "expr": "nodejs_eventloop_lag_p99_seconds{namespace=~\"$namespace\"}",
+              "legendFormat": "p99 — {{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": { "fillOpacity": 5, "lineWidth": 2 }
+            }
+          }
+        },
+        {
+          "id": 5,
+          "title": "Go Goroutines",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "datasource": { "type": "prometheus" },
+          "targets": [
+            {
+              "expr": "go_goroutines{namespace=~\"$namespace\"}",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": { "fillOpacity": 10, "lineWidth": 2 }
+            }
+          }
+        },
+        {
+          "id": 6,
+          "title": "Open File Descriptors",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "datasource": { "type": "prometheus" },
+          "targets": [
+            {
+              "expr": "process_open_fds{namespace=~\"$namespace\"}",
+              "legendFormat": "open — {{pod}}"
+            },
+            {
+              "expr": "process_max_fds{namespace=~\"$namespace\"}",
+              "legendFormat": "max — {{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": { "fillOpacity": 5, "lineWidth": 2 }
+            }
+          }
+        },
+        {
+          "id": 7,
+          "title": "Node.js GC Duration",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+          "datasource": { "type": "prometheus" },
+          "targets": [
+            {
+              "expr": "rate(nodejs_gc_duration_seconds_sum{namespace=~\"$namespace\"}[5m])",
+              "legendFormat": "{{kind}} — {{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": { "fillOpacity": 10, "lineWidth": 2 }
+            }
+          }
+        },
+        {
+          "id": 8,
+          "title": "Network I/O",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+          "datasource": { "type": "prometheus" },
+          "targets": [
+            {
+              "expr": "rate(process_network_receive_bytes_total{namespace=~\"$namespace\"}[5m])",
+              "legendFormat": "rx — {{pod}}"
+            },
+            {
+              "expr": "rate(process_network_transmit_bytes_total{namespace=~\"$namespace\"}[5m])",
+              "legendFormat": "tx — {{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps",
+              "custom": { "fillOpacity": 10, "lineWidth": 2 }
+            }
+          }
+        }
+      ],
+      "schemaVersion": 39
+    }

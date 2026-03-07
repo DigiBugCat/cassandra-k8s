@@ -35,8 +35,7 @@ metadata:
 data:
   grafana.ini: |
     [server]
-    root_url = https://portal.REDACTED_DOMAIN/grafana/
-    serve_from_sub_path = true
+    root_url = https://grafana.REDACTED_DOMAIN/
     [security]
     admin_user = admin
     admin_password = admin
@@ -84,6 +83,10 @@ spec:
               mountPath: /var/lib/grafana
             - name: datasources
               mountPath: /etc/grafana/provisioning/datasources
+            - name: dashboard-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: dashboards
+              mountPath: /etc/grafana/dashboards
             - name: config
               mountPath: /etc/grafana/grafana.ini
               subPath: grafana.ini
@@ -101,6 +104,12 @@ spec:
         - name: datasources
           configMap:
             name: grafana-datasources
+        - name: dashboard-provider
+          configMap:
+            name: grafana-dashboard-provider
+        - name: dashboards
+          configMap:
+            name: grafana-dashboards
         - name: config
           configMap:
             name: grafana-config
