@@ -1,4 +1,0 @@
-apiVersion: v2
-name: cassandra-portal
-description: Portal gateway — nginx reverse proxy + cloudflared tunnel
-version: 0.1.0
