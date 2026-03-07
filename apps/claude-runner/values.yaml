@@ -76,3 +76,5 @@ sealedSecrets:
   obsidianAuth:
     OBSIDIAN_AUTH_TOKEN: ""
     OBSIDIAN_E2EE_PASSWORD: ""
+  cloudflaredTunnel:
+    token: ""
