@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Cassandra GitOps — One-time cluster bootstrap
-# Installs ArgoCD + Image Updater, then applies the app-of-apps.
+# Cassandra k8s — One-time cluster bootstrap
+# Installs ArgoCD, Image Updater, Sealed Secrets, then applies the app-of-apps.
 #
 # Prerequisites:
 #   - k3d cluster running (k3d cluster create cassandra)
 #   - kubectl configured to point at the cluster
 #   - GitHub PAT with read:packages scope (for pulling from GHCR)
+#   - kubeseal CLI installed (brew install kubeseal)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 
-echo "=== Cassandra GitOps Bootstrap ==="
+echo "=== Cassandra k8s Bootstrap ==="
 echo ""
 
 # Check prerequisites
@@ -43,7 +44,15 @@ kubectl -n argocd wait --for=condition=available --timeout=60s deployment/argocd
 echo "Image Updater installed."
 echo ""
 
-# 3. Configure GHCR credentials
+# 3. Install Sealed Secrets controller
+echo "--- Installing Sealed Secrets ---"
+kubectl apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.27.3/controller.yaml
+echo "Waiting for Sealed Secrets controller..."
+kubectl -n kube-system wait --for=condition=available --timeout=60s deployment/sealed-secrets-controller
+echo "Sealed Secrets installed."
+echo ""
+
+# 4. Configure GHCR credentials
 echo "--- Configuring GHCR credentials ---"
 if kubectl -n argocd get secret ghcr-credentials &>/dev/null; then
   echo "GHCR credentials already exist, skipping."
@@ -59,43 +68,24 @@ else
 fi
 echo ""
 
-# 4. Apply Image Updater registry config
+# 5. Apply Image Updater registry config
 echo "--- Applying Image Updater config ---"
 kubectl apply -f "$REPO_DIR/argocd/image-updater.yaml"
-# Restart image updater to pick up new config
 kubectl -n argocd rollout restart deployment/argocd-image-updater
 echo ""
 
-# 5. Connect this gitops repo to ArgoCD
-echo "--- Connecting gitops repo ---"
-# For public repos, no credentials needed.
-# For private repos, add a deploy key or PAT:
-#   argocd repo add https://github.com/DigiBugCat/cassandra-k8s.git --username git --password <PAT>
-echo "If the gitops repo is private, run:"
+# 6. Connect this repo to ArgoCD
+echo "--- Connecting k8s repo ---"
+echo "If the repo is private, run:"
 echo "  argocd repo add https://github.com/DigiBugCat/cassandra-k8s.git --username git --password <PAT>"
 echo ""
 
-# 6. Apply the app-of-apps (this bootstraps everything)
+# 7. Apply the app-of-apps
 echo "--- Applying app-of-apps ---"
 kubectl apply -f "$REPO_DIR/argocd/app-of-apps.yaml"
 echo ""
 
-# 7. Create application secrets (if not already present)
-echo "--- Checking secrets ---"
-kubectl create namespace claude-runner --dry-run=client -o yaml | kubectl apply -f -
-if ! kubectl -n claude-runner get secret claude-tokens &>/dev/null; then
-  echo "Claude tokens secret not found."
-  read -rsp "CLAUDE_CODE_OAUTH_TOKEN: " CLAUDE_TOKEN
-  echo ""
-  kubectl -n claude-runner create secret generic claude-tokens \
-    --from-literal=CLAUDE_CODE_OAUTH_TOKEN="$CLAUDE_TOKEN"
-  echo "Claude tokens secret created."
-else
-  echo "Claude tokens secret already exists."
-fi
-echo ""
-
-# 8. Print status
+# 8. Print status and next steps
 echo "=== Bootstrap Complete ==="
 echo ""
 echo "ArgoCD UI:"
@@ -108,6 +98,23 @@ echo "  Password: $ADMIN_PASS"
 echo ""
 echo "Applications:"
 kubectl -n argocd get applications 2>/dev/null || echo "  (syncing...)"
+echo ""
+echo "=== Next: Seal your secrets ==="
+echo ""
+echo "Secrets are managed via Sealed Secrets. To create encrypted values:"
+echo ""
+echo "  # 1. Seal a secret value for production (namespace: claude-runner)"
+echo "  echo -n 'sk-ant-oat-...' | kubeseal --raw --namespace claude-runner --name claude-tokens --from-file=/dev/stdin"
+echo ""
+echo "  # 2. Seal a secret value for dev (namespace: claude-runner-dev)"
+echo "  echo -n 'sk-ant-oat-...' | kubeseal --raw --namespace claude-runner-dev --name claude-tokens --from-file=/dev/stdin"
+echo ""
+echo "  # 3. Paste the output into values-production.yaml or values-dev.yaml under sealedSecrets:"
+echo "  #    sealedSecrets:"
+echo "  #      claudeTokens:"
+echo "  #        CLAUDE_CODE_OAUTH_TOKEN: \"AgBy3i4OJSWK+...\""
+echo ""
+echo "  # 4. Commit and push — ArgoCD applies the SealedSecret, controller decrypts it."
 echo ""
 echo "Grafana (after monitoring syncs):"
 echo "  kubectl -n monitoring port-forward svc/grafana 3000:3000"

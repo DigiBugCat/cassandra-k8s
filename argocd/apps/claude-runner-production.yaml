@@ -1,16 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: claude-runner
+  name: claude-runner-production
   namespace: argocd
   annotations:
-    # ArgoCD Image Updater: watch GHCR for new orchestrator + runner images
     argocd-image-updater.argoproj.io/image-list: >-
       orchestrator=ghcr.io/digibugcat/claude-agent-runner/orchestrator,
       runner=ghcr.io/digibugcat/claude-agent-runner/runner
     argocd-image-updater.argoproj.io/orchestrator.update-strategy: latest
     argocd-image-updater.argoproj.io/runner.update-strategy: latest
-    # Write back via Helm value overrides (no commit back to repo)
     argocd-image-updater.argoproj.io/write-back-method: argocd
     argocd-image-updater.argoproj.io/orchestrator.helm.image-name: image.orchestrator
     argocd-image-updater.argoproj.io/orchestrator.helm.image-tag: image.tag
@@ -23,9 +21,10 @@ spec:
     targetRevision: main
     path: apps/claude-runner
     helm:
-      releaseName: claude-runner
+      releaseName: claude-runner-production
       valueFiles:
         - values.yaml
+        - values-production.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: claude-runner

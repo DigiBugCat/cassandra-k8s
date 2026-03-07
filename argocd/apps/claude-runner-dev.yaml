@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: claude-runner-dev
+  namespace: argocd
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: >-
+      orchestrator=ghcr.io/digibugcat/claude-agent-runner/orchestrator,
+      runner=ghcr.io/digibugcat/claude-agent-runner/runner
+    argocd-image-updater.argoproj.io/orchestrator.update-strategy: latest
+    argocd-image-updater.argoproj.io/runner.update-strategy: latest
+    argocd-image-updater.argoproj.io/write-back-method: argocd
+    argocd-image-updater.argoproj.io/orchestrator.helm.image-name: image.orchestrator
+    argocd-image-updater.argoproj.io/orchestrator.helm.image-tag: image.tag
+    argocd-image-updater.argoproj.io/runner.helm.image-name: image.runner
+    argocd-image-updater.argoproj.io/runner.helm.image-tag: image.tag
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/DigiBugCat/cassandra-k8s.git
+    targetRevision: main
+    path: apps/claude-runner
+    helm:
+      releaseName: claude-runner-dev
+      valueFiles:
+        - values.yaml
+        - values-dev.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: claude-runner-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

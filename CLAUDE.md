@@ -1,8 +1,8 @@
-# CLAUDE.md — Cassandra GitOps
+# CLAUDE.md — Cassandra k8s
 
 ## What This Is
 
-GitOps repo for all Cassandra infrastructure deployed to k8s/k3d. ArgoCD watches this repo and auto-applies changes.
+k8s deployment repo for all Cassandra services. ArgoCD watches this repo and auto-applies changes. Helm charts for app workloads, kustomize for shared infra (monitoring).
 
 **This repo contains only deployment manifests.** Application code lives in separate repos — their CI pipelines build and push images to GHCR. ArgoCD Image Updater detects new images and triggers rollouts.
 
@@ -11,45 +11,66 @@ GitOps repo for all Cassandra infrastructure deployed to k8s/k3d. ArgoCD watches
 ```
 cassandra-k8s/
 ├── apps/
-│   └── claude-runner/           # Claude Agent Runner (orchestrator + runner pods)
-│       ├── base/                # Base kustomize manifests
-│       └── overlays/
-│           └── production/      # Production overrides (image tags, env)
-├── monitoring/                  # Observability stack (shared across all apps)
-│   ├── base/                    # VictoriaMetrics, VictoriaLogs, Vector, Grafana
-│   └── overlays/
-│       └── production/
+│   └── claude-runner/              # Helm chart
+│       ├── Chart.yaml
+│       ├── values.yaml             # Defaults
+│       ├── values-dev.yaml         # Dev overrides (smaller resources, shorter timeouts)
+│       ├── values-production.yaml  # Prod overrides (full resources, obsidian enabled)
+│       └── templates/
+├── monitoring/                     # Observability stack (kustomize, shared)
+│   ├── base/
+│   └── overlays/production/
 ├── argocd/
-│   ├── namespace.yaml           # ArgoCD namespace
-│   ├── image-updater.yaml       # GHCR registry config for Image Updater
-│   ├── app-of-apps.yaml         # Root Application (manages all others)
-│   └── apps/                    # Individual ArgoCD Application CRDs
-│       ├── claude-runner.yaml
+│   ├── app-of-apps.yaml            # Root Application
+│   ├── image-updater.yaml          # GHCR registry config
+│   └── apps/                       # Per-env ArgoCD Applications
+│       ├── claude-runner-dev.yaml
+│       ├── claude-runner-production.yaml
 │       └── monitoring.yaml
 ├── scripts/
-│   └── bootstrap.sh             # One-time cluster setup
+│   └── bootstrap.sh                # One-time cluster setup
 └── docs/
-    └── setup.md                 # Full setup guide
+    └── setup.md
 ```
+
+## Environments
+
+| Environment | Namespace | Values | Notes |
+|-------------|-----------|--------|-------|
+| Dev | `claude-runner-dev` | `values.yaml` + `values-dev.yaml` | Smaller resources, 1 warm pod, 30min timeout |
+| Production | `claude-runner` | `values.yaml` + `values-production.yaml` | Full resources, 2 warm pods, 4hr timeout, Obsidian enabled |
+
+Same Helm chart, different value files, different namespaces. Both deployed to the same cluster.
 
 ## How It Works
 
 ```
-Developer pushes code to claude-agent-runner
-  → GitHub CI: test → build → push images to GHCR
-  → ArgoCD Image Updater (in cluster): detects new image tag
-  → ArgoCD: updates deployment → pods roll out with new image
+Push code to claude-agent-runner
+  → GitHub CI: test → build → push to GHCR
+  → ArgoCD Image Updater: detects new tag → updates both dev + prod
 
-Developer pushes manifest change to cassandra-k8s
-  → ArgoCD: detects git change → auto-syncs → applies to cluster
+Push manifest change to cassandra-k8s
+  → ArgoCD: detects git change → auto-syncs both environments
 ```
 
-## Adding a New Service
+## Secrets
 
-1. Create `apps/<service-name>/base/` with kustomize manifests
-2. Create `apps/<service-name>/overlays/production/kustomization.yaml`
-3. Create `argocd/apps/<service-name>.yaml` (ArgoCD Application CRD)
-4. Push — ArgoCD picks it up automatically via the app-of-apps pattern
+Managed via **Sealed Secrets** — encrypted in git, decrypted in-cluster.
+
+```bash
+# Seal a value for production
+echo -n 'sk-ant-oat-...' | kubeseal --raw --namespace claude-runner --name claude-tokens --from-file=/dev/stdin
+
+# Seal a value for dev
+echo -n 'sk-ant-oat-...' | kubeseal --raw --namespace claude-runner-dev --name claude-tokens --from-file=/dev/stdin
+
+# Paste into values-production.yaml or values-dev.yaml:
+#   sealedSecrets:
+#     claudeTokens:
+#       CLAUDE_CODE_OAUTH_TOKEN: "AgBy3i4OJSWK+..."
+```
+
+Sealed values are namespace-scoped — a value sealed for `claude-runner` won't work in `claude-runner-dev`.
 
 ## Commands
 
@@ -57,39 +78,22 @@ Developer pushes manifest change to cassandra-k8s
 # Bootstrap (one-time)
 ./scripts/bootstrap.sh
 
-# Check ArgoCD sync status
+# Check sync status
 kubectl -n argocd get applications
-
-# Force sync
-kubectl -n argocd patch application claude-runner --type merge -p '{"operation":{"sync":{}}}'
 
 # ArgoCD UI
 kubectl -n argocd port-forward svc/argocd-server 8443:443
-# https://localhost:8443 — admin password: kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
 
-# Validate kustomize
-kubectl kustomize apps/claude-runner/overlays/production
-kubectl kustomize monitoring/overlays/production
+# Force sync an app
+kubectl -n argocd patch application claude-runner-production --type merge -p '{"operation":{"sync":{}}}'
+
+# Validate Helm chart locally
+helm template claude-runner apps/claude-runner -f apps/claude-runner/values.yaml -f apps/claude-runner/values-dev.yaml --namespace claude-runner-dev
 ```
 
-## Secrets
+## Adding a New Service
 
-Secrets are in the base manifests with `REPLACE_ME` placeholders. On first deploy, update them imperatively:
-
-```bash
-kubectl -n claude-runner create secret generic claude-tokens \
-  --from-literal=CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat-... \
-  --dry-run=client -o yaml | kubectl apply -f -
-```
-
-ArgoCD won't overwrite secrets that already exist (they're excluded from prune by default for Opaque secrets).
-
-## Image Update Flow
-
-ArgoCD Image Updater watches GHCR for:
-- `ghcr.io/digibugcat/claude-agent-runner/orchestrator`
-- `ghcr.io/digibugcat/claude-agent-runner/runner`
-
-When a new `:latest` tag is pushed, Image Updater tells ArgoCD to update the deployment. The write-back method is `argocd` (parameter override), not git-commit — so no commits are pushed back to this repo.
-
-The runner image is special: the orchestrator spawns runner pods programmatically via the k8s API. The `RUNNER_IMAGE` env var in the deployment tells the orchestrator which image to use. When Image Updater bumps the orchestrator, the new orchestrator picks up the latest runner image tag from its env.
+1. Create `apps/<service>/` as a Helm chart (Chart.yaml, values.yaml, templates/)
+2. Add `values-dev.yaml` and `values-production.yaml`
+3. Create ArgoCD Applications in `argocd/apps/` (one per environment)
+4. Push — app-of-apps picks it up automatically

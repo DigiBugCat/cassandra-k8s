@@ -1,0 +1,50 @@
+# Dev environment overrides
+
+orchestrator:
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+
+runner:
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+
+warmPool:
+  size: 1
+
+sessions:
+  idleTimeoutMs: "1800000"    # 30 min (shorter for dev)
+  storageSize: 5Gi
+
+persistence:
+  orchestrator:
+    size: 1Gi
+
+service:
+  type: NodePort
+  httpNodePort: 9080
+  wsNodePort: 9081
+
+obsidian:
+  enabled: false
+
+tenants:
+  enabled: false
+
+# Sealed secret values — generate with:
+#   echo -n 'sk-ant-oat-...' | kubeseal --raw --namespace claude-runner-dev --name claude-tokens --from-file=/dev/stdin
+sealedSecrets:
+  claudeTokens:
+    CLAUDE_CODE_OAUTH_TOKEN: ""   # paste kubeseal output here
+  gitTokens:
+    GIT_TOKEN: ""
+    GITHUB_TOKEN: ""

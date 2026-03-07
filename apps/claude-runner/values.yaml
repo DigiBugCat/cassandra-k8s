@@ -62,3 +62,17 @@ obsidian:
 
 tenants:
   enabled: false
+
+# Sealed Secrets — encrypted values safe to commit to git.
+# Generate encrypted values with:
+#   echo -n 'my-secret-value' | kubeseal --raw --namespace <namespace> --name <secret-name> --from-file=/dev/stdin
+# Leave empty in defaults — override per environment in values-dev.yaml / values-production.yaml.
+sealedSecrets:
+  claudeTokens:
+    CLAUDE_CODE_OAUTH_TOKEN: ""
+  gitTokens:
+    GIT_TOKEN: ""
+    GITHUB_TOKEN: ""
+  obsidianAuth:
+    OBSIDIAN_AUTH_TOKEN: ""
+    OBSIDIAN_E2EE_PASSWORD: ""
