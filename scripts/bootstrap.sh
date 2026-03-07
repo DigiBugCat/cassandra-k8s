@@ -33,9 +33,9 @@ kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 echo "Waiting for ArgoCD to be ready..."
 kubectl -n argocd wait --for=condition=available --timeout=120s deployment/argocd-server
-# Poll git every 60s instead of default 3min — faster deploys
-kubectl -n argocd patch configmap argocd-cm --type merge -p '{"data":{"timeout.reconciliation":"60s"}}'
-echo "ArgoCD installed (60s reconciliation interval)."
+# Poll git every 30s instead of default 3min — faster deploys
+kubectl -n argocd patch configmap argocd-cm --type merge -p '{"data":{"timeout.reconciliation":"30s"}}'
+echo "ArgoCD installed (30s reconciliation interval)."
 echo ""
 
 # 2. Install ArgoCD Image Updater
@@ -43,10 +43,10 @@ echo "--- Installing ArgoCD Image Updater ---"
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/stable/manifests/install.yaml
 echo "Waiting for Image Updater to be ready..."
 kubectl -n argocd wait --for=condition=available --timeout=60s deployment/argocd-image-updater
-# Poll GHCR every 60s instead of default 2min — faster deploys
+# Poll GHCR every 30s instead of default 2min — faster deploys
 kubectl -n argocd patch deploy argocd-image-updater --type=json \
-  -p '[{"op":"replace","path":"/spec/template/spec/containers/0/args","value":["run","--interval","1m"]}]'
-echo "Image Updater installed (1m poll interval)."
+  -p '[{"op":"replace","path":"/spec/template/spec/containers/0/args","value":["run","--interval","30s"]}]'
+echo "Image Updater installed (30s poll interval)."
 echo ""
 
 # 3. Install Sealed Secrets controller
