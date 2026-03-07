@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: claude-runner
+  namespace: argocd
+  annotations:
+    # ArgoCD Image Updater: watch GHCR for new orchestrator + runner images
+    argocd-image-updater.argoproj.io/image-list: >-
+      orchestrator=ghcr.io/digibugcat/claude-agent-runner/orchestrator,
+      runner=ghcr.io/digibugcat/claude-agent-runner/runner
+    # Update strategy: use latest semver tag, or "latest" if no semver tags
+    argocd-image-updater.argoproj.io/orchestrator.update-strategy: latest
+    argocd-image-updater.argoproj.io/runner.update-strategy: latest
+    # Write back method: use ArgoCD parameter overrides (no commit back to repo)
+    argocd-image-updater.argoproj.io/write-back-method: argocd
+    # Tell image updater which kustomize image to override for the orchestrator
+    argocd-image-updater.argoproj.io/orchestrator.kustomize.image-name: ghcr.io/digibugcat/claude-agent-runner/orchestrator
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/DigiBugCat/cassandra-gitops.git
+    targetRevision: main
+    path: apps/claude-runner/overlays/production
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: claude-runner
+  syncPolicy:
+    automated:
+      prune: true      # Delete resources removed from git
+      selfHeal: true   # Revert manual changes to match git
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

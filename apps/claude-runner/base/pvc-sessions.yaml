@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: claude-sessions
+spec:
+  accessModes:
+    # RWO for single-node k3s (local-path). Change to ReadWriteMany for multi-node (requires NFS/Longhorn).
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
