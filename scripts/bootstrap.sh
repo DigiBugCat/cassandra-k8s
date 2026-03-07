@@ -70,9 +70,9 @@ echo ""
 echo "--- Connecting gitops repo ---"
 # For public repos, no credentials needed.
 # For private repos, add a deploy key or PAT:
-#   argocd repo add https://github.com/DigiBugCat/cassandra-gitops.git --username git --password <PAT>
+#   argocd repo add https://github.com/DigiBugCat/cassandra-k8s.git --username git --password <PAT>
 echo "If the gitops repo is private, run:"
-echo "  argocd repo add https://github.com/DigiBugCat/cassandra-gitops.git --username git --password <PAT>"
+echo "  argocd repo add https://github.com/DigiBugCat/cassandra-k8s.git --username git --password <PAT>"
 echo ""
 
 # 6. Apply the app-of-apps (this bootstraps everything)

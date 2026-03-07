@@ -87,7 +87,7 @@ kubectl -n argocd port-forward svc/argocd-server 8443:443
 
 ### Manifest changes (this repo)
 
-1. Push to `main` in `cassandra-gitops`
+1. Push to `main` in `cassandra-k8s`
 2. ArgoCD (polling every 3 minutes, or webhook for instant) detects git change
 3. ArgoCD compares desired state (git) vs live state (cluster)
 4. ArgoCD auto-syncs: applies additions, updates changes, prunes deletions
@@ -124,7 +124,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/DigiBugCat/cassandra-gitops.git
+    repoURL: https://github.com/DigiBugCat/cassandra-k8s.git
     targetRevision: main
     path: apps/<service>/overlays/production
   destination:

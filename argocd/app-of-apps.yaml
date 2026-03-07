@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/DigiBugCat/cassandra-gitops.git
+    repoURL: https://github.com/DigiBugCat/cassandra-k8s.git
     targetRevision: main
     path: argocd/apps
   destination:

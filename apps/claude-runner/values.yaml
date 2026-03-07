@@ -1,0 +1,64 @@
+# Claude Agent Runner — Helm values
+
+image:
+  orchestrator: ghcr.io/digibugcat/claude-agent-runner/orchestrator
+  runner: ghcr.io/digibugcat/claude-agent-runner/runner
+  tag: latest
+  pullPolicy: Always
+
+orchestrator:
+  replicas: 1
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "1"
+      memory: "512Mi"
+
+runner:
+  backend: k8s
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "2"
+      memory: "2Gi"
+
+warmPool:
+  size: 2
+
+sessions:
+  idleTimeoutMs: "14400000"
+  messageTimeoutMs: "600000"
+  cleanupOnExit: true
+  storageSize: 10Gi
+
+persistence:
+  orchestrator:
+    size: 1Gi
+
+service:
+  type: NodePort
+  httpPort: 8080
+  httpNodePort: 9080
+  wsPort: 8081
+  wsNodePort: 9081
+
+cloudflaredTunnel:
+  enabled: false
+  image: cloudflare/cloudflared:2024.12.2
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+
+obsidian:
+  enabled: false
+
+tenants:
+  enabled: false

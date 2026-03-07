@@ -1,28 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: claude-orchestrator
+  name: {{ include "claude-runner.orchestratorName" . }}
   labels:
-    app: claude-orchestrator
+    {{- include "claude-runner.orchestratorLabels" . | nindent 4 }}
 spec:
-  replicas: 1 # SQLite — single writer only
+  replicas: {{ .Values.orchestrator.replicas }}
   selector:
     matchLabels:
-      app: claude-orchestrator
+      {{- include "claude-runner.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: claude-orchestrator
+        {{- include "claude-runner.selectorLabels" . | nindent 8 }}
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
     spec:
-      serviceAccountName: claude-orchestrator
+      serviceAccountName: {{ include "claude-runner.orchestratorName" . }}
       containers:
         - name: orchestrator
-          image: ghcr.io/digibugcat/claude-agent-runner/orchestrator:latest
-          imagePullPolicy: Always
+          image: {{ .Values.image.orchestrator }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
               containerPort: 8080
@@ -34,15 +34,15 @@ spec:
             - name: WS_PORT
               value: "8081"
             - name: RUNNER_BACKEND
-              value: "k8s"
+              value: {{ .Values.runner.backend | quote }}
             - name: K8S_NAMESPACE
-              value: "claude-runner"
+              value: {{ .Release.Namespace | quote }}
             - name: RUNNER_IMAGE
-              value: "ghcr.io/digibugcat/claude-agent-runner/runner:latest"
+              value: {{ .Values.image.runner }}:{{ .Values.image.tag }}
             - name: RUNNER_IMAGE_PULL_POLICY
-              value: "Always"
+              value: {{ .Values.image.pullPolicy | quote }}
             - name: ORCHESTRATOR_HOST
-              value: "claude-orchestrator"
+              value: {{ include "claude-runner.orchestratorName" . | quote }}
             - name: DB_PATH
               value: "/data/orchestrator.db"
             - name: SESSIONS_VOLUME
@@ -50,11 +50,17 @@ spec:
             - name: SESSIONS_PATH
               value: "/data/sessions"
             - name: WARM_POOL_SIZE
-              value: "2"
+              value: {{ .Values.warmPool.size | quote }}
             - name: IDLE_TIMEOUT_MS
-              value: "14400000"
+              value: {{ .Values.sessions.idleTimeoutMs | quote }}
+            - name: MESSAGE_TIMEOUT_MS
+              value: {{ .Values.sessions.messageTimeoutMs | quote }}
             - name: CLEANUP_RUNNERS_ON_EXIT
+              value: {{ .Values.sessions.cleanupOnExit | quote }}
+            {{- if .Values.tenants.enabled }}
+            - name: ENABLE_TENANTS
               value: "true"
+            {{- end }}
             - name: CLAUDE_CODE_OAUTH_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -72,6 +78,7 @@ spec:
                   name: git-tokens
                   key: GITHUB_TOKEN
                   optional: true
+            {{- if .Values.obsidian.enabled }}
             - name: OBSIDIAN_AUTH_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -84,6 +91,7 @@ spec:
                   name: obsidian-auth
                   key: OBSIDIAN_E2EE_PASSWORD
                   optional: true
+            {{- end }}
           volumeMounts:
             - name: orchestrator-data
               mountPath: /data
@@ -91,12 +99,7 @@ spec:
               mountPath: /data/sessions
               readOnly: true
           resources:
-            requests:
-              cpu: "250m"
-              memory: "256Mi"
-            limits:
-              cpu: "1"
-              memory: "512Mi"
+            {{- toYaml .Values.orchestrator.resources | nindent 12 }}
           readinessProbe:
             httpGet:
               path: /health
@@ -109,6 +112,19 @@ spec:
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 30
+        {{- if .Values.cloudflaredTunnel.enabled }}
+        - name: cloudflared
+          image: {{ .Values.cloudflaredTunnel.image }}
+          args: ["tunnel", "run"]
+          env:
+            - name: TUNNEL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare-tunnel
+                  key: token
+          resources:
+            {{- toYaml .Values.cloudflaredTunnel.resources | nindent 12 }}
+        {{- end }}
       volumes:
         - name: orchestrator-data
           persistentVolumeClaim:

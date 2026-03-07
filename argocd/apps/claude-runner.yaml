@@ -8,26 +8,31 @@ metadata:
     argocd-image-updater.argoproj.io/image-list: >-
       orchestrator=ghcr.io/digibugcat/claude-agent-runner/orchestrator,
       runner=ghcr.io/digibugcat/claude-agent-runner/runner
-    # Update strategy: use latest semver tag, or "latest" if no semver tags
     argocd-image-updater.argoproj.io/orchestrator.update-strategy: latest
     argocd-image-updater.argoproj.io/runner.update-strategy: latest
-    # Write back method: use ArgoCD parameter overrides (no commit back to repo)
+    # Write back via Helm value overrides (no commit back to repo)
     argocd-image-updater.argoproj.io/write-back-method: argocd
-    # Tell image updater which kustomize image to override for the orchestrator
-    argocd-image-updater.argoproj.io/orchestrator.kustomize.image-name: ghcr.io/digibugcat/claude-agent-runner/orchestrator
+    argocd-image-updater.argoproj.io/orchestrator.helm.image-name: image.orchestrator
+    argocd-image-updater.argoproj.io/orchestrator.helm.image-tag: image.tag
+    argocd-image-updater.argoproj.io/runner.helm.image-name: image.runner
+    argocd-image-updater.argoproj.io/runner.helm.image-tag: image.tag
 spec:
   project: default
   source:
-    repoURL: https://github.com/DigiBugCat/cassandra-gitops.git
+    repoURL: https://github.com/DigiBugCat/cassandra-k8s.git
     targetRevision: main
-    path: apps/claude-runner/overlays/production
+    path: apps/claude-runner
+    helm:
+      releaseName: claude-runner
+      valueFiles:
+        - values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: claude-runner
   syncPolicy:
     automated:
-      prune: true      # Delete resources removed from git
-      selfHeal: true   # Revert manual changes to match git
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
       - PrunePropagationPolicy=foreground

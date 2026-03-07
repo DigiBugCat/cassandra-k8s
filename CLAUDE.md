@@ -9,7 +9,7 @@ GitOps repo for all Cassandra infrastructure deployed to k8s/k3d. ArgoCD watches
 ## Repo Structure
 
 ```
-cassandra-gitops/
+cassandra-k8s/
 ├── apps/
 │   └── claude-runner/           # Claude Agent Runner (orchestrator + runner pods)
 │       ├── base/                # Base kustomize manifests
@@ -40,7 +40,7 @@ Developer pushes code to claude-agent-runner
   → ArgoCD Image Updater (in cluster): detects new image tag
   → ArgoCD: updates deployment → pods roll out with new image
 
-Developer pushes manifest change to cassandra-gitops
+Developer pushes manifest change to cassandra-k8s
   → ArgoCD: detects git change → auto-syncs → applies to cluster
 ```
 
