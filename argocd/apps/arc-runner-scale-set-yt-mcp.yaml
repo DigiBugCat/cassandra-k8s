@@ -21,7 +21,7 @@ spec:
         githubConfigSecret: github-secret
         runnerScaleSetName: "arc-runner-yt-mcp"
         minRunners: 0
-        maxRunners: 2
+        maxRunners: 10
         containerMode:
           type: "dind"
   destination:
