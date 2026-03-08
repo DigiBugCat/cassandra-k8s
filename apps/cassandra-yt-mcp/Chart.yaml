@@ -1,0 +1,5 @@
+apiVersion: v2
+name: cassandra-yt-mcp
+description: Cassandra YT MCP backend with Cloudflare tunnel sidecar
+version: 0.1.0
+appVersion: "0.1.0"
