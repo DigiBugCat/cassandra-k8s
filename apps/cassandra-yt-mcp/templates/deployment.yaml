@@ -6,6 +6,8 @@ metadata:
     {{- include "cassandra-yt-mcp.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.backend.replicas }}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "cassandra-yt-mcp.selectorLabels" . | nindent 6 }}
