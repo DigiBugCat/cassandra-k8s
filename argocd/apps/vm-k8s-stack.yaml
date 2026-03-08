@@ -67,6 +67,7 @@ spec:
         # ── Grafana ──
         grafana:
           enabled: true
+          fullnameOverride: grafana
           adminPassword: admin
           plugins:
             - victoriametrics-logs-datasource
