@@ -17,7 +17,7 @@ spec:
         controllerServiceAccount:
           namespace: arc-systems
           name: arc-gha-rs-controller
-        githubConfigUrl: "https://github.com/DigiBugCat"
+        githubConfigUrl: "https://github.com/DigiBugCat/claude-agent-runner"
         githubConfigSecret: github-secret
         runnerScaleSetName: "arc-runner"
         minRunners: 0
