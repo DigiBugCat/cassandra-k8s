@@ -1,5 +1,5 @@
 image:
-  repository: ghcr.io/digibugcat/cassandra-yt-mcp/backend
+  repository: 172.20.0.161:30500/cassandra-yt-mcp/backend
   tag: latest
   pullPolicy: Always
   pullSecrets: []

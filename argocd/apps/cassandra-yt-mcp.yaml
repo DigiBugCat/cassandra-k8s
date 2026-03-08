@@ -5,7 +5,7 @@ metadata:
   namespace: argocd
   annotations:
     argocd-image-updater.argoproj.io/image-list: >-
-      backend=ghcr.io/digibugcat/cassandra-yt-mcp/backend
+      backend=172.20.0.161:30500/cassandra-yt-mcp/backend
     argocd-image-updater.argoproj.io/backend.update-strategy: latest
     argocd-image-updater.argoproj.io/write-back-method: argocd
     argocd-image-updater.argoproj.io/backend.helm.image-name: image.repository

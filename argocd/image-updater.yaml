@@ -20,3 +20,8 @@ data:
         ping: yes
         credentials: secret:argocd/ghcr-credentials#username:password
         defaultns: digibugcat
+      - name: Local Registry
+        api_url: http://172.20.0.161:30500
+        prefix: 172.20.0.161:30500
+        ping: yes
+        insecure: yes

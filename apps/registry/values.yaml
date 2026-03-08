@@ -1,0 +1,19 @@
+image:
+  repository: registry
+  tag: "2"
+  pullPolicy: IfNotPresent
+
+replicas: 1
+port: 5000
+nodePort: 30500
+
+storage:
+  hostPath: /mnt/raid1/registry
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"

@@ -1,5 +1,5 @@
 # ARC Runner Scale Set for cassandra-yt-mcp — ephemeral self-hosted GitHub Actions runners.
-# Uses upstream OCI chart with DinD for docker build support.
+# Full DinD template (not containerMode) to pass --insecure-registry for local registry.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -22,21 +22,71 @@ spec:
         runnerScaleSetName: "gh-arc-cassandra-yt-mcp"
         minRunners: 0
         maxRunners: 8
-        containerMode:
-          type: "dind"
         template:
           spec:
+            initContainers:
+              - name: init-dind-externals
+                image: ghcr.io/actions/actions-runner:latest
+                command: ["cp", "-r", "/home/runner/externals/.", "/home/runner/tmpDir/"]
+                volumeMounts:
+                  - name: dind-externals
+                    mountPath: /home/runner/tmpDir
+              - name: dind
+                image: docker:dind
+                args:
+                  - dockerd
+                  - --host=unix:///var/run/docker.sock
+                  - --group=$(DOCKER_GROUP_GID)
+                  - --insecure-registry=172.20.0.161:30500
+                env:
+                  - name: DOCKER_GROUP_GID
+                    value: "123"
+                securityContext:
+                  privileged: true
+                restartPolicy: Always
+                startupProbe:
+                  exec:
+                    command:
+                      - docker
+                      - info
+                  initialDelaySeconds: 0
+                  failureThreshold: 24
+                  periodSeconds: 5
+                volumeMounts:
+                  - name: work
+                    mountPath: /home/runner/_work
+                  - name: dind-sock
+                    mountPath: /var/run
+                  - name: dind-externals
+                    mountPath: /home/runner/externals
             containers:
               - name: runner
                 image: ghcr.io/actions/actions-runner:latest
                 command: ["/home/runner/run.sh"]
+                env:
+                  - name: DOCKER_HOST
+                    value: unix:///var/run/docker.sock
+                  - name: RUNNER_WAIT_FOR_DOCKER_IN_SECONDS
+                    value: "120"
+                volumeMounts:
+                  - name: work
+                    mountPath: /home/runner/_work
+                  - name: dind-sock
+                    mountPath: /var/run
                 resources:
                   requests:
                     cpu: "1"
                     memory: "2Gi"
                   limits:
-                    cpu: "4"
-                    memory: "8Gi"
+                    cpu: "8"
+                    memory: "16Gi"
+            volumes:
+              - name: work
+                emptyDir: {}
+              - name: dind-sock
+                emptyDir: {}
+              - name: dind-externals
+                emptyDir: {}
   destination:
     server: https://kubernetes.default.svc
     namespace: arc-runners

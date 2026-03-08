@@ -1,8 +1,8 @@
 # Claude Agent Runner — Helm values
 
 image:
-  orchestrator: ghcr.io/digibugcat/claude-agent-runner/orchestrator
-  runner: ghcr.io/digibugcat/claude-agent-runner/runner
+  orchestrator: 172.20.0.161:30500/claude-agent-runner/orchestrator
+  runner: 172.20.0.161:30500/claude-agent-runner/runner
   tag: latest
   pullPolicy: Always
 

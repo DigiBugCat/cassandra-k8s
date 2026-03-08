@@ -1,0 +1,5 @@
+apiVersion: v2
+name: registry
+description: Local Docker registry on RAID1 storage
+version: 0.1.0
+type: application
