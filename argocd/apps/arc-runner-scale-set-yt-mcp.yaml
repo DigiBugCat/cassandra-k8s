@@ -59,6 +59,8 @@ spec:
                     mountPath: /var/run
                   - name: dind-externals
                     mountPath: /home/runner/externals
+                  - name: dind-cache
+                    mountPath: /var/lib/docker
             containers:
               - name: runner
                 image: ghcr.io/actions/actions-runner:latest
@@ -87,6 +89,10 @@ spec:
                 emptyDir: {}
               - name: dind-externals
                 emptyDir: {}
+              - name: dind-cache
+                hostPath:
+                  path: /var/lib/arc-dind-cache/yt-mcp
+                  type: DirectoryOrCreate
   destination:
     server: https://kubernetes.default.svc
     namespace: arc-runners
