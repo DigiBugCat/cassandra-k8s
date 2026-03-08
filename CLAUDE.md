@@ -4,25 +4,29 @@
 
 k8s deployment repo for all Cassandra services. ArgoCD watches this repo and auto-applies changes. Helm charts for app workloads, kustomize for shared infra (monitoring).
 
-**This repo contains only deployment manifests.** Application code lives in separate repos — their CI pipelines build and push images to GHCR. ArgoCD Image Updater detects new images and triggers rollouts.
+**This repo contains only deployment manifests.** Application code lives in separate repos — their CI pipelines build and push images to the local registry (`172.20.0.161:30500`). ArgoCD Image Updater detects new tags and triggers rollouts.
 
 ## Repo Structure
 
 ```
 cassandra-k8s/
 ├── apps/
-│   └── claude-runner/              # Helm chart
+│   ├── claude-runner/              # Helm chart — orchestrator + runner
+│   │   ├── Chart.yaml
+│   │   ├── values.yaml             # Defaults
+│   │   ├── values-dev.yaml         # Dev overrides (smaller resources, shorter timeouts)
+│   │   ├── values-production.yaml  # Prod overrides (full resources, obsidian enabled)
+│   │   └── templates/
+│   └── cassandra-yt-mcp/           # Helm chart — GPU transcription backend
 │       ├── Chart.yaml
-│       ├── values.yaml             # Defaults
-│       ├── values-dev.yaml         # Dev overrides (smaller resources, shorter timeouts)
-│       ├── values-production.yaml  # Prod overrides (full resources, obsidian enabled)
+│       ├── values.yaml
 │       └── templates/
 ├── monitoring/                     # Observability stack (kustomize, shared)
 │   ├── base/
 │   └── overlays/production/
 ├── argocd/
 │   ├── app-of-apps.yaml            # Root Application
-│   ├── image-updater.yaml          # GHCR registry config
+│   ├── image-updater.yaml          # Local registry config
 │   └── apps/                       # Per-env ArgoCD Applications
 │       ├── claude-runner-dev.yaml
 │       ├── claude-runner-production.yaml
@@ -45,9 +49,9 @@ Same Helm chart, different value files, different namespaces. Both deployed to t
 ## How It Works
 
 ```
-Push code to claude-agent-runner
-  → GitHub CI: test → build → push to GHCR
-  → ArgoCD Image Updater: detects new tag → updates both dev + prod
+Push code to claude-agent-runner / cassandra-yt-mcp
+  → GitHub CI: test → build → push to local registry (172.20.0.161:30500)
+  → ArgoCD Image Updater: detects new tag → auto-syncs deployments
 
 Push manifest change to cassandra-k8s
   → ArgoCD: detects git change → auto-syncs both environments
@@ -55,22 +59,47 @@ Push manifest change to cassandra-k8s
 
 ## Secrets
 
-Managed via **Sealed Secrets** — encrypted in git, decrypted in-cluster.
+Managed manually via `kubectl create secret` — **nothing in git**. Raw values stored in `cassandra-stack/env/` (private repo).
+
+### claude-runner (namespace: `claude-runner`)
 
 ```bash
-# Seal a value for production
-echo -n 'sk-ant-oat-...' | kubeseal --raw --namespace claude-runner --name claude-tokens --from-file=/dev/stdin
+kubectl create secret generic admin-key --namespace claude-runner \
+  --from-literal=ADMIN_API_KEY=<key>
 
-# Seal a value for dev
-echo -n 'sk-ant-oat-...' | kubeseal --raw --namespace claude-runner-dev --name claude-tokens --from-file=/dev/stdin
+kubectl create secret generic claude-tokens --namespace claude-runner \
+  --from-literal=CLAUDE_CODE_OAUTH_TOKEN=<token>
 
-# Paste into values-production.yaml or values-dev.yaml:
-#   sealedSecrets:
-#     claudeTokens:
-#       CLAUDE_CODE_OAUTH_TOKEN: "AgBy3i4OJSWK+..."
+kubectl create secret generic git-tokens --namespace claude-runner \
+  --from-literal=GITHUB_TOKEN=<token>
+
+kubectl create secret generic obsidian-auth --namespace claude-runner \
+  --from-literal=OBSIDIAN_AUTH_TOKEN=<token> \
+  --from-literal=OBSIDIAN_E2EE_PASSWORD=<password>
+
+kubectl create secret generic cloudflare-tunnel --namespace claude-runner \
+  --from-literal=token=<tunnel-token>
 ```
 
-Sealed values are namespace-scoped — a value sealed for `claude-runner` won't work in `claude-runner-dev`.
+### claude-runner-dev (namespace: `claude-runner-dev`)
+
+```bash
+kubectl create secret generic claude-tokens --namespace claude-runner-dev \
+  --from-literal=CLAUDE_CODE_OAUTH_TOKEN=<token>
+
+kubectl create secret generic git-tokens --namespace claude-runner-dev \
+  --from-literal=GITHUB_TOKEN=<token>
+```
+
+### cassandra-yt-mcp (namespace: `cassandra-yt-mcp`)
+
+```bash
+kubectl create secret generic cassandra-yt-mcp-backend --namespace cassandra-yt-mcp \
+  --from-literal=BACKEND_API_TOKEN=<token>
+
+kubectl create secret generic cloudflare-tunnel --namespace cassandra-yt-mcp \
+  --from-literal=token=<tunnel-token>
+```
 
 ## Commands
 

@@ -7,16 +7,17 @@ Kubernetes deployment manifests for the [Cassandra](https://github.com/DigiBugCa
 ## What's Here
 
 - **`apps/claude-runner/`** — Helm chart for the [Claude Agent Runner](https://github.com/DigiBugCat/claude-agent-runner) orchestrator + runner pods
+- **`apps/cassandra-yt-mcp/`** — Helm chart for the GPU transcription backend
 - **`apps/arc-runners/`** — Self-hosted GitHub Actions runners via [ARC](https://github.com/actions/actions-runner-controller)
 - **`argocd/`** — ArgoCD Applications (app-of-apps pattern) + Image Updater config
 - **`monitoring/`** — VictoriaMetrics + VictoriaLogs + Vector + Grafana (kustomize)
-- **`scripts/bootstrap.sh`** — One-time cluster setup (ArgoCD, Sealed Secrets, Image Updater)
+- **`scripts/bootstrap.sh`** — One-time cluster setup (ArgoCD, Image Updater)
 
 ## How It Works
 
 ```
-Push code to claude-agent-runner
-  → GitHub CI: test → build → push to GHCR
+Push code to claude-agent-runner / cassandra-yt-mcp
+  → ARC runners: test → build → push to local registry
   → ArgoCD Image Updater: detects new tag → updates deployments
 
 Push manifest change to this repo
@@ -38,7 +39,7 @@ Everything is GitOps — push to `main` and ArgoCD handles the rest.
 
 ### Code changes (app updates)
 
-Push to `main` in [claude-agent-runner](https://github.com/DigiBugCat/claude-agent-runner). CI builds Docker images → pushes to GHCR → ArgoCD Image Updater detects new tags → rolls out to **both** dev and prod automatically.
+Push to `main` in [claude-agent-runner](https://github.com/DigiBugCat/claude-agent-runner) or [cassandra-yt-mcp](https://github.com/DigiBugCat/cassandra-yt-mcp). ARC runners build Docker images → push to local registry (`172.20.0.161:30500`) → ArgoCD Image Updater detects new tags → rolls out automatically.
 
 ### Config changes (k8s manifests)
 
@@ -62,7 +63,7 @@ kubectl create secret generic claude-tokens --namespace claude-runner-dev \
   --from-literal=CLAUDE_CODE_OAUTH_TOKEN='sk-ant-...'
 ```
 
-Or use SealedSecrets (values in `values-dev.yaml` / `values-production.yaml` are kubeseal-encrypted and safe in git).
+See [`docs/setup.md`](docs/setup.md) for the full list of secrets per namespace.
 
 ### Useful commands
 
@@ -84,7 +85,7 @@ kubectl -n monitoring port-forward svc/grafana 3000:3000
 ## Setup
 
 ```bash
-# Prerequisites: kubectl pointed at your cluster, kubeseal installed
+# Prerequisites: kubectl pointed at your cluster
 ./scripts/bootstrap.sh
 ```
 

@@ -2,13 +2,11 @@
 set -euo pipefail
 
 # Cassandra k8s — One-time cluster bootstrap
-# Installs ArgoCD, Image Updater, Sealed Secrets, then applies the app-of-apps.
+# Installs ArgoCD and Image Updater, then applies the app-of-apps.
 #
 # Prerequisites:
-#   - k3d cluster running (k3d cluster create cassandra)
+#   - k3s cluster running
 #   - kubectl configured to point at the cluster
-#   - GitHub PAT with read:packages scope (for pulling from GHCR)
-#   - kubeseal CLI installed (brew install kubeseal)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
@@ -19,7 +17,6 @@ echo ""
 # Check prerequisites
 if ! kubectl cluster-info &>/dev/null; then
   echo "ERROR: kubectl not connected to a cluster"
-  echo "Run: k3d cluster create cassandra"
   exit 1
 fi
 
@@ -34,7 +31,7 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 echo "Waiting for ArgoCD to be ready..."
 kubectl -n argocd wait --for=condition=available --timeout=120s deployment/argocd-server
 # Poll git every 30s instead of default 3min — faster deploys
-# Enable OCI Helm support for ARC charts from ghcr.io
+# Enable OCI Helm support for ARC charts
 kubectl -n argocd patch configmap argocd-cm --type merge -p '{"data":{"timeout.reconciliation":"30s","helm.enabled":"true"}}'
 echo "ArgoCD installed (30s reconciliation interval, OCI Helm enabled)."
 echo ""
@@ -44,54 +41,30 @@ echo "--- Installing ArgoCD Image Updater ---"
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/stable/manifests/install.yaml
 echo "Waiting for Image Updater to be ready..."
 kubectl -n argocd wait --for=condition=available --timeout=60s deployment/argocd-image-updater
-# Poll GHCR every 30s instead of default 2min — faster deploys
+# Poll registry every 30s instead of default 2min — faster deploys
 kubectl -n argocd patch deploy argocd-image-updater --type=json \
   -p '[{"op":"replace","path":"/spec/template/spec/containers/0/args","value":["run","--interval","30s"]}]'
 echo "Image Updater installed (30s poll interval)."
 echo ""
 
-# 3. Install Sealed Secrets controller
-echo "--- Installing Sealed Secrets ---"
-kubectl apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.27.3/controller.yaml
-echo "Waiting for Sealed Secrets controller..."
-kubectl -n kube-system wait --for=condition=available --timeout=60s deployment/sealed-secrets-controller
-echo "Sealed Secrets installed."
-echo ""
-
-# 4. Configure GHCR credentials
-echo "--- Configuring GHCR credentials ---"
-if kubectl -n argocd get secret ghcr-credentials &>/dev/null; then
-  echo "GHCR credentials already exist, skipping."
-else
-  echo "Create a GitHub PAT with read:packages scope."
-  read -rp "GitHub username: " GH_USER
-  read -rsp "GitHub PAT (read:packages): " GH_PAT
-  echo ""
-  kubectl -n argocd create secret generic ghcr-credentials \
-    --from-literal=username="$GH_USER" \
-    --from-literal=password="$GH_PAT"
-  echo "GHCR credentials created."
-fi
-echo ""
-
-# 5. Apply Image Updater registry config
+# 3. Apply Image Updater registry config
 echo "--- Applying Image Updater config ---"
 kubectl apply -f "$REPO_DIR/argocd/image-updater.yaml"
 kubectl -n argocd rollout restart deployment/argocd-image-updater
 echo ""
 
-# 6. Connect this repo to ArgoCD
+# 4. Connect this repo to ArgoCD
 echo "--- Connecting k8s repo ---"
 echo "If the repo is private, run:"
 echo "  argocd repo add https://github.com/DigiBugCat/cassandra-k8s.git --username git --password <PAT>"
 echo ""
 
-# 7. Apply the app-of-apps
+# 5. Apply the app-of-apps
 echo "--- Applying app-of-apps ---"
 kubectl apply -f "$REPO_DIR/argocd/app-of-apps.yaml"
 echo ""
 
-# 8. Print status and next steps
+# 6. Print status and next steps
 echo "=== Bootstrap Complete ==="
 echo ""
 echo "ArgoCD UI:"
@@ -105,22 +78,12 @@ echo ""
 echo "Applications:"
 kubectl -n argocd get applications 2>/dev/null || echo "  (syncing...)"
 echo ""
-echo "=== Next: Seal your secrets ==="
+echo "=== Next: Create secrets ==="
 echo ""
-echo "Secrets are managed via Sealed Secrets. To create encrypted values:"
+echo "All secrets are managed manually via kubectl. See docs/setup.md for the full list."
 echo ""
-echo "  # 1. Seal a secret value for production (namespace: claude-runner)"
-echo "  echo -n 'sk-ant-oat-...' | kubeseal --raw --namespace claude-runner --name claude-tokens --from-file=/dev/stdin"
-echo ""
-echo "  # 2. Seal a secret value for dev (namespace: claude-runner-dev)"
-echo "  echo -n 'sk-ant-oat-...' | kubeseal --raw --namespace claude-runner-dev --name claude-tokens --from-file=/dev/stdin"
-echo ""
-echo "  # 3. Paste the output into values-production.yaml or values-dev.yaml under sealedSecrets:"
-echo "  #    sealedSecrets:"
-echo "  #      claudeTokens:"
-echo "  #        CLAUDE_CODE_OAUTH_TOKEN: \"AgBy3i4OJSWK+...\""
-echo ""
-echo "  # 4. Commit and push — ArgoCD applies the SealedSecret, controller decrypts it."
+echo "  kubectl create secret generic claude-tokens --namespace claude-runner \\"
+echo "    --from-literal=CLAUDE_CODE_OAUTH_TOKEN='sk-ant-...'"
 echo ""
 echo "=== GitHub Actions Runners (ARC) ==="
 echo ""

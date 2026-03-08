@@ -1,6 +1,5 @@
 # ARC Runner Scale Set — Helm values
 # The ARC controller is installed separately (via ArgoCD).
-# This chart creates the sealed secret for GitHub PAT auth.
 
 githubConfigUrl: "https://github.com/DigiBugCat"
 runnerScaleSetName: "arc-runner"
@@ -35,4 +34,4 @@ dind:
       memory: "4Gi"
 
 # Secrets are created manually on the cluster (not in git).
-# See apps/arc-runners/templates/sealed-secrets.yaml for instructions.
+# kubectl create secret generic github-secret --namespace arc-runners --from-literal=github_token='ghp_...'
