@@ -24,19 +24,6 @@ spec:
         maxRunners: 2
         containerMode:
           type: "dind"
-        template:
-          spec:
-            containers:
-              - name: runner
-                image: ghcr.io/actions/actions-runner:latest
-                command: ["/home/runner/run.sh"]
-                resources:
-                  requests:
-                    cpu: "1"
-                    memory: "2Gi"
-                  limits:
-                    cpu: "4"
-                    memory: "8Gi"
   destination:
     server: https://kubernetes.default.svc
     namespace: arc-runners
