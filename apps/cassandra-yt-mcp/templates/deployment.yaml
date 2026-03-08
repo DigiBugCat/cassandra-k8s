@@ -32,6 +32,11 @@ spec:
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - "1.1.1.1"
+          - "8.8.8.8"
       containers:
         - name: backend
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
