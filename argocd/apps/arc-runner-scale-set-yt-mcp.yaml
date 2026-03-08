@@ -91,7 +91,7 @@ spec:
                 emptyDir: {}
               - name: dind-cache
                 hostPath:
-                  path: /var/lib/arc-dind-cache/yt-mcp
+                  path: /mnt/raid1/arc-dind-cache/yt-mcp
                   type: DirectoryOrCreate
   destination:
     server: https://kubernetes.default.svc
