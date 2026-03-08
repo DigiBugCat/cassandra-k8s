@@ -21,7 +21,7 @@ spec:
         githubConfigSecret: github-secret
         runnerScaleSetName: "gh-arc-claude-agent-runner"
         minRunners: 0
-        maxRunners: 1
+        maxRunners: 2
         template:
           spec:
             initContainers:
