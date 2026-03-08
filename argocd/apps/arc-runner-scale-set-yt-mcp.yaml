@@ -79,14 +79,17 @@ spec:
                     memory: "2Gi"
                   limits:
                     cpu: "8"
-                    memory: "16Gi"
+                    memory: "32Gi"
             volumes:
               - name: work
-                emptyDir: {}
+                emptyDir:
+                  medium: Memory
               - name: dind-sock
-                emptyDir: {}
+                emptyDir:
+                  medium: Memory
               - name: dind-externals
-                emptyDir: {}
+                emptyDir:
+                  medium: Memory
   destination:
     server: https://kubernetes.default.svc
     namespace: arc-runners
