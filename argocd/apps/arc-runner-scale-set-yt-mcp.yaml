@@ -59,6 +59,8 @@ spec:
                     mountPath: /var/run
                   - name: dind-externals
                     mountPath: /home/runner/externals
+                  - name: dind-data
+                    mountPath: /var/lib/docker
             containers:
               - name: runner
                 image: ghcr.io/actions/actions-runner:latest
@@ -88,6 +90,9 @@ spec:
                 emptyDir:
                   medium: Memory
               - name: dind-externals
+                emptyDir:
+                  medium: Memory
+              - name: dind-data
                 emptyDir:
                   medium: Memory
   destination:
