@@ -21,7 +21,7 @@ spec:
         githubConfigSecret: github-secret
         runnerScaleSetName: "gh-arc-cassandra-yt-mcp"
         minRunners: 0
-        maxRunners: 8
+        maxRunners: 1
         template:
           spec:
             initContainers:
