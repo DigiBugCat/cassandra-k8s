@@ -34,8 +34,9 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 echo "Waiting for ArgoCD to be ready..."
 kubectl -n argocd wait --for=condition=available --timeout=120s deployment/argocd-server
 # Poll git every 30s instead of default 3min — faster deploys
-kubectl -n argocd patch configmap argocd-cm --type merge -p '{"data":{"timeout.reconciliation":"30s"}}'
-echo "ArgoCD installed (30s reconciliation interval)."
+# Enable OCI Helm support for ARC charts from ghcr.io
+kubectl -n argocd patch configmap argocd-cm --type merge -p '{"data":{"timeout.reconciliation":"30s","helm.enabled":"true"}}'
+echo "ArgoCD installed (30s reconciliation interval, OCI Helm enabled)."
 echo ""
 
 # 2. Install ArgoCD Image Updater
@@ -120,6 +121,21 @@ echo "  #      claudeTokens:"
 echo "  #        CLAUDE_CODE_OAUTH_TOKEN: \"AgBy3i4OJSWK+...\""
 echo ""
 echo "  # 4. Commit and push — ArgoCD applies the SealedSecret, controller decrypts it."
+echo ""
+echo "=== GitHub Actions Runners (ARC) ==="
+echo ""
+echo "Self-hosted runners are managed by ARC (Actions Runner Controller)."
+echo "The controller and runner scale set are deployed via ArgoCD."
+echo ""
+echo "To configure auth:"
+echo "  1. Create a fine-grained PAT at https://github.com/settings/personal-access-tokens/new"
+echo "     - Resource owner: DigiBugCat"
+echo "     - Repository access: All repositories"
+echo "     - Permissions: Administration → Read & Write (for self-hosted runners)"
+echo "  2. Create the secret on the cluster:"
+echo "     kubectl create namespace arc-runners --dry-run=client -o yaml | kubectl apply -f -"
+echo "     kubectl create secret generic github-secret --namespace arc-runners --from-literal=github_token='ghp_...'"
+echo "  3. Use 'runs-on: arc-runner' in GitHub Actions workflows"
 echo ""
 echo "Grafana (after monitoring syncs):"
 echo "  kubectl -n monitoring port-forward svc/grafana 3000:3000"

@@ -1,0 +1,5 @@
+# Production overrides for ARC runners
+# Secrets are created manually on the cluster (not in git):
+#   kubectl create secret generic github-secret \
+#     --namespace arc-runners \
+#     --from-literal=github_token='ghp_...'

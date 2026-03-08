@@ -1,0 +1,5 @@
+# The runner scale set is installed via the upstream ARC Helm chart.
+# ArgoCD Application (argocd/apps/arc-runner-scale-set.yaml) handles this.
+#
+# This chart only manages the SealedSecret for GitHub PAT auth.
+# The runner scale set references the decrypted secret by name: "github-secret".

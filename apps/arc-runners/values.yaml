@@ -1,0 +1,38 @@
+# ARC Runner Scale Set — Helm values
+# The ARC controller is installed separately (via ArgoCD).
+# This chart creates the sealed secret for GitHub PAT auth.
+
+githubConfigUrl: "https://github.com/DigiBugCat"
+runnerScaleSetName: "arc-runner"
+
+# Scaling
+minRunners: 0
+maxRunners: 4
+
+# Docker-in-Docker for docker build steps
+containerMode:
+  type: "dind"
+
+# Runner pod resources
+runner:
+  image: ghcr.io/actions/actions-runner:latest
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "4"
+      memory: "8Gi"
+
+dind:
+  image: docker:dind
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+# Secrets are created manually on the cluster (not in git).
+# See apps/arc-runners/templates/sealed-secrets.yaml for instructions.

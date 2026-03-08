@@ -1,0 +1,4 @@
+apiVersion: v2
+name: arc-runners
+description: GitHub Actions self-hosted runners via ARC (Actions Runner Controller)
+version: 0.1.0
