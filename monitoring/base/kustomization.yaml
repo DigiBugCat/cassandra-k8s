@@ -4,9 +4,4 @@ kind: Kustomization
 namespace: monitoring
 
 resources:
-  - namespace.yaml
-  - victoria-metrics.yaml
-  - victoria-logs.yaml
-  - vector.yaml
-  - grafana.yaml
-  - grafana-dashboards.yaml
+  - custom-dashboards.yaml

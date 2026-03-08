@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/DigiBugCat/cassandra-k8s.git
     targetRevision: main
-    path: monitoring/overlays/production
+    path: monitoring/base
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
