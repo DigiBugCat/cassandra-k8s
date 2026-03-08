@@ -99,7 +99,7 @@ spec:
           assertNoLeakedSecrets: false
           grafana.ini:
             server:
-              root_url: https://grafana.REDACTED_DOMAIN/
+              root_url: "%(protocol)s://%(domain)s:%(http_port)s/"
             auth.anonymous:
               enabled: true
               org_role: Viewer
