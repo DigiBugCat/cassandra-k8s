@@ -86,12 +86,10 @@ spec:
               access: proxy
               url: http://victoria-logs:9428
               editable: true
+          assertNoLeakedSecrets: false
           grafana.ini:
             server:
               root_url: https://grafana.REDACTED_DOMAIN/
-            security:
-              admin_user: admin
-              admin_password: admin
             auth.anonymous:
               enabled: true
               org_role: Viewer
