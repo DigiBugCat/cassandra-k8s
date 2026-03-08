@@ -1,6 +1,6 @@
 image:
   repository: 172.20.0.161:30500/cassandra-yt-mcp/backend
-  tag: "358f9ba"
+  tag: "8ed4205"
   pullPolicy: IfNotPresent
   pullSecrets: []
 
