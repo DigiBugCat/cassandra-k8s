@@ -53,6 +53,14 @@ spec:
         # ── node-exporter (node metrics) ──
         prometheus-node-exporter:
           enabled: true
+          # Disable hostRootFsMount — fails on WSL2 nodes (shared mount not supported)
+          hostRootFsMount:
+            enabled: false
+          tolerations:
+            - key: dedicated
+              operator: Equal
+              value: gpu-node
+              effect: NoSchedule
 
         # ── kube-state-metrics (k8s object metrics) ──
         kube-state-metrics:
@@ -136,7 +144,7 @@ spec:
                 spec:
                   containers:
                     - name: victoria-logs
-                      image: victoriametrics/victoria-logs:v1.47.0-victorialogs
+                      image: victoriametrics/victoria-logs:v1.47.0
                       args:
                         - -storageDataPath=/data
                         - -retentionPeriod=30d
