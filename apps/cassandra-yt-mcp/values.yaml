@@ -32,7 +32,7 @@ backend:
   env:
     host: "0.0.0.0"
     pollIntervalSeconds: "5"
-    maxWorkers: "2"
+    maxWorkers: "1"
     enableLocalTranscription: "true"
 
 persistence:
