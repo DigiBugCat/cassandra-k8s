@@ -1,7 +1,7 @@
 image:
   repository: 172.20.0.161:30500/cassandra-yt-mcp/backend
-  tag: latest
-  pullPolicy: Always
+  tag: "358f9ba"
+  pullPolicy: IfNotPresent
   pullSecrets: []
 
 backend:
