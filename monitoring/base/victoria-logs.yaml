@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
         - name: victoria-logs
-          image: victoriametrics/victoria-logs:v1.15.0-victorialogs
+          image: victoriametrics/victoria-logs:v1.47.0-victorialogs
           args:
             - -storageDataPath=/data
             - -retentionPeriod=30d

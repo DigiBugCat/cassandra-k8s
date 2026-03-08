@@ -2,6 +2,7 @@ image:
   repository: ghcr.io/digibugcat/cassandra-yt-mcp/backend
   tag: latest
   pullPolicy: Always
+  pullSecrets: []
 
 backend:
   replicas: 1

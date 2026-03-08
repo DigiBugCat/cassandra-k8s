@@ -60,7 +60,7 @@ spec:
     spec:
       containers:
         - name: victoria-metrics
-          image: victoriametrics/victoria-metrics:v1.112.0
+          image: victoriametrics/victoria-metrics:v1.137.0
           args:
             - -promscrape.config=/config/scrape.yml
             - -storageDataPath=/data
