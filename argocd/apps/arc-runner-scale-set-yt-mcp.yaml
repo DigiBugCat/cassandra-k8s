@@ -10,7 +10,7 @@ spec:
   source:
     chart: gha-runner-scale-set
     repoURL: ghcr.io/actions/actions-runner-controller-charts
-    targetRevision: 0.10.1
+    targetRevision: 0.13.1
     helm:
       releaseName: gh-arc-cassandra-yt-mcp
       valuesObject:
