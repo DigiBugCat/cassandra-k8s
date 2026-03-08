@@ -30,7 +30,56 @@ Push manifest change to this repo
 | Dev | `claude-runner-dev` | `values.yaml` + `values-dev.yaml` |
 | Production | `claude-runner` | `values.yaml` + `values-production.yaml` |
 
-Same Helm chart, different value files, different namespaces.
+Same Helm chart, different value files, different namespaces. Both deploy to the same cluster — ArgoCD manages them as separate Applications.
+
+## Deploying
+
+Everything is GitOps — push to `main` and ArgoCD handles the rest.
+
+### Code changes (app updates)
+
+Push to `main` in [claude-agent-runner](https://github.com/DigiBugCat/claude-agent-runner). CI builds Docker images → pushes to GHCR → ArgoCD Image Updater detects new tags → rolls out to **both** dev and prod automatically.
+
+### Config changes (k8s manifests)
+
+Edit the Helm values or templates in this repo and push to `main`. ArgoCD auto-syncs within 30 seconds.
+
+- **Dev only**: edit `apps/claude-runner/values-dev.yaml`
+- **Prod only**: edit `apps/claude-runner/values-production.yaml`
+- **Both**: edit `apps/claude-runner/values.yaml` or templates
+
+### Secrets
+
+Secrets are created manually on the cluster (not in git):
+
+```bash
+# Production
+kubectl create secret generic claude-tokens --namespace claude-runner \
+  --from-literal=CLAUDE_CODE_OAUTH_TOKEN='sk-ant-...'
+
+# Dev
+kubectl create secret generic claude-tokens --namespace claude-runner-dev \
+  --from-literal=CLAUDE_CODE_OAUTH_TOKEN='sk-ant-...'
+```
+
+Or use SealedSecrets (values in `values-dev.yaml` / `values-production.yaml` are kubeseal-encrypted and safe in git).
+
+### Useful commands
+
+```bash
+# Check what's deployed
+kubectl -n argocd get applications
+
+# Force sync a specific app
+kubectl -n argocd patch application claude-runner-production \
+  --type merge -p '{"operation":{"sync":{}}}'
+
+# ArgoCD UI
+kubectl -n argocd port-forward svc/argocd-server 8443:443
+
+# Grafana
+kubectl -n monitoring port-forward svc/grafana 3000:3000
+```
 
 ## Setup
 
