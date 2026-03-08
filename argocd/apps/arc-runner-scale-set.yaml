@@ -14,6 +14,9 @@ spec:
     helm:
       releaseName: arc-runner-set
       valuesObject:
+        controllerServiceAccount:
+          namespace: arc-systems
+          name: arc-gha-rs-controller
         githubConfigUrl: "https://github.com/DigiBugCat"
         githubConfigSecret: github-secret
         runnerScaleSetName: "arc-runner"
