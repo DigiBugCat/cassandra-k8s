@@ -3,7 +3,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: arc-runner-scale-set
+  name: gh-arc-claude-agent-runner
   namespace: argocd
 spec:
   project: default
@@ -12,16 +12,16 @@ spec:
     repoURL: ghcr.io/actions/actions-runner-controller-charts
     targetRevision: 0.13.1
     helm:
-      releaseName: arc-runner-set
+      releaseName: gh-arc-claude-agent-runner
       valuesObject:
         controllerServiceAccount:
           namespace: arc-systems
           name: arc-gha-rs-controller
         githubConfigUrl: "https://github.com/DigiBugCat/claude-agent-runner"
         githubConfigSecret: github-secret
-        runnerScaleSetName: "arc-runner"
+        runnerScaleSetName: "gh-arc-claude-agent-runner"
         minRunners: 0
-        maxRunners: 4
+        maxRunners: 8
         containerMode:
           type: "dind"
         template:

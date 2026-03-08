@@ -3,7 +3,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: arc-runner-scale-set-yt-mcp
+  name: gh-arc-cassandra-yt-mcp
   namespace: argocd
 spec:
   project: default
@@ -12,16 +12,16 @@ spec:
     repoURL: ghcr.io/actions/actions-runner-controller-charts
     targetRevision: 0.10.1
     helm:
-      releaseName: arc-runner-set-yt-mcp
+      releaseName: gh-arc-cassandra-yt-mcp
       valuesObject:
         controllerServiceAccount:
           namespace: arc-systems
           name: arc-gha-rs-controller
         githubConfigUrl: "https://github.com/DigiBugCat/cassandra-yt-mcp"
         githubConfigSecret: github-secret
-        runnerScaleSetName: "arc-runner-yt-mcp"
+        runnerScaleSetName: "gh-arc-cassandra-yt-mcp"
         minRunners: 0
-        maxRunners: 10
+        maxRunners: 8
         containerMode:
           type: "dind"
   destination:
