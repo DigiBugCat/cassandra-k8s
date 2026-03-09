@@ -7,38 +7,25 @@ image:
 backend:
   replicas: 1
   port: 3000
-  role: standalone  # standalone | coordinator | worker
-  gpuWorkers: ""    # comma-separated worker URLs (coordinator mode)
-  tolerations:
-    - key: "dedicated"
-      operator: "Equal"
-      value: "gpu-node"
-      effect: "NoSchedule"
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: role
-                operator: In
-                values:
-                  - gpu-node
+  role: coordinator
+  gpuWorkers: "http://cassandra-yt-mcp-worker:3001"
+  tolerations: []
+  affinity: {}
   resources:
     requests:
-      cpu: "1"
-      memory: "4Gi"
+      cpu: "250m"
+      memory: "512Mi"
     limits:
-      cpu: "4"
-      memory: "8Gi"
-      nvidia.com/gpu: 1
+      cpu: "1"
+      memory: "1Gi"
   env:
     host: "0.0.0.0"
     pollIntervalSeconds: "5"
     maxWorkers: "1"
-    enableLocalTranscription: "true"
+    enableLocalTranscription: "false"
 
 worker:
-  enabled: false
+  enabled: true
   replicas: 1
   port: 3001
   tolerations:
