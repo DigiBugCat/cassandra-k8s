@@ -1,8 +1,12 @@
 image:
-  repository: 172.20.0.161:30500/cassandra-yt-mcp/backend
+  repository: 172.20.0.161:30500/cassandra-yt-mcp/coordinator
   tag: "fedf7a8"
   pullPolicy: IfNotPresent
   pullSecrets: []
+
+workerImage:
+  repository: 172.20.0.161:30500/cassandra-yt-mcp/backend
+  tag: "fedf7a8"
 
 backend:
   replicas: 1
