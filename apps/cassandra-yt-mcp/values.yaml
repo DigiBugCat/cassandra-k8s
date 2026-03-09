@@ -7,6 +7,8 @@ image:
 backend:
   replicas: 1
   port: 3000
+  role: standalone  # standalone | coordinator | worker
+  gpuWorkers: ""    # comma-separated worker URLs (coordinator mode)
   tolerations:
     - key: "dedicated"
       operator: "Equal"
@@ -34,6 +36,33 @@ backend:
     pollIntervalSeconds: "5"
     maxWorkers: "1"
     enableLocalTranscription: "true"
+
+worker:
+  enabled: false
+  replicas: 1
+  port: 3001
+  tolerations:
+    - key: "dedicated"
+      operator: "Equal"
+      value: "gpu-node"
+      effect: "NoSchedule"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: role
+                operator: In
+                values:
+                  - gpu-node
+  resources:
+    requests:
+      cpu: "1"
+      memory: "4Gi"
+    limits:
+      cpu: "4"
+      memory: "8Gi"
+      nvidia.com/gpu: 1
 
 persistence:
   size: 50Gi

@@ -15,6 +15,10 @@ spec:
     metadata:
       labels:
         {{- include "cassandra-yt-mcp.selectorLabels" . | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .Values.backend.port | quote }}
+        prometheus.io/path: "/metrics"
     spec:
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
@@ -42,6 +46,12 @@ spec:
             - name: http
               containerPort: {{ .Values.backend.port }}
           env:
+            - name: ROLE
+              value: {{ .Values.backend.role | quote }}
+            {{- if .Values.backend.gpuWorkers }}
+            - name: GPU_WORKERS
+              value: {{ .Values.backend.gpuWorkers | quote }}
+            {{- end }}
             - name: HOST
               value: {{ .Values.backend.env.host | quote }}
             - name: PORT
