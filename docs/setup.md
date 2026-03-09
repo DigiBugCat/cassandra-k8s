@@ -18,7 +18,7 @@ Local machine (kubectl) → pantainos k3s cluster
 
 - **Images**: Built by ARC runners, pushed to local registry (`172.20.0.161:30500`)
 - **Deploys**: ArgoCD Image Updater detects new tags → auto-syncs deployments
-- **GPU node**: callsonballz (WSL2 bridged networking, RTX 5080) joins via LAN IP
+- **GPU nodes**: callsonballz (172.20.2.32) and will (172.20.2.33) — both WSL2 bridged networking, RTX 5080. Label `role=gpu-node`, taint `dedicated=gpu-node:NoSchedule`
 
 ## Secrets
 
