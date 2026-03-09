@@ -2,7 +2,7 @@
 
 ## What This Is
 
-k8s deployment repo for all Cassandra services. ArgoCD watches this repo and auto-applies changes. Helm charts for app workloads, kustomize for shared infra (monitoring).
+k8s deployment repo for all Cassandra services. ArgoCD watches this repo and auto-applies changes. Helm charts for app workloads.
 
 **This repo contains only deployment manifests.** Application code lives in separate repos — their CI pipelines build and push images to the local registry (`172.20.0.161:30500`). ArgoCD Image Updater detects new tags and triggers rollouts.
 
@@ -21,16 +21,13 @@ cassandra-k8s/
 │       ├── Chart.yaml
 │       ├── values.yaml
 │       └── templates/
-├── monitoring/                     # Observability stack (kustomize, shared)
-│   ├── base/
-│   └── overlays/production/
 ├── argocd/
 │   ├── app-of-apps.yaml            # Root Application
 │   ├── image-updater.yaml          # Local registry config
 │   └── apps/                       # Per-env ArgoCD Applications
 │       ├── claude-runner-dev.yaml
 │       ├── claude-runner-production.yaml
-│       └── monitoring.yaml
+│       └── observability-dashboards.yaml
 ├── scripts/
 │   └── bootstrap.sh                # One-time cluster setup
 └── docs/
