@@ -17,19 +17,28 @@ cassandra-k8s/
 │   │   ├── values-dev.yaml         # Dev overrides (smaller resources, shorter timeouts)
 │   │   ├── values-production.yaml  # Prod overrides (full resources, obsidian enabled)
 │   │   └── templates/
-│   └── cassandra-yt-mcp/           # Helm chart — GPU transcription backend
+│   ├── cassandra-yt-mcp/           # Helm chart — GPU transcription backend
 │       ├── Chart.yaml
 │       ├── values.yaml
 │       └── templates/
+│   ├── registry/                   # Helm chart — local Docker registry
+│   └── arc-runners/                # Helm wrapper for ARC runner secrets
 ├── argocd/
 │   ├── app-of-apps.yaml            # Root Application
 │   ├── image-updater.yaml          # Local registry config
 │   └── apps/                       # Per-env ArgoCD Applications
 │       ├── claude-runner-dev.yaml
 │       ├── claude-runner-production.yaml
+│       ├── cassandra-yt-mcp.yaml
+│       ├── registry.yaml
+│       ├── arc-controller.yaml
+│       ├── arc-runner-scale-set-*.yaml
+│       ├── arc-runner-secrets.yaml
+│       ├── vm-k8s-stack.yaml
 │       └── observability-dashboards.yaml
 ├── scripts/
-│   └── bootstrap.sh                # One-time cluster setup
+│   ├── bootstrap.sh                # One-time cluster setup
+│   └── test-integration.sh         # Local chart + Argo smoke validation
 └── docs/
     └── setup.md
 ```
@@ -103,6 +112,9 @@ kubectl create secret generic cloudflare-tunnel --namespace cassandra-yt-mcp \
 ```bash
 # Bootstrap (one-time)
 ./scripts/bootstrap.sh
+
+# Repo-local integration validation
+./scripts/test-integration.sh
 
 # Check sync status
 kubectl -n argocd get applications

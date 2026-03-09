@@ -8,10 +8,11 @@ Kubernetes deployment manifests for the [Cassandra](https://github.com/DigiBugCa
 
 - **`apps/claude-runner/`** — Helm chart for the [Claude Agent Runner](https://github.com/DigiBugCat/claude-agent-runner) orchestrator + runner pods
 - **`apps/cassandra-yt-mcp/`** — Helm chart for the GPU transcription backend
-- **`apps/arc-runners/`** — Self-hosted GitHub Actions runners via [ARC](https://github.com/actions/actions-runner-controller)
-- **`argocd/`** — ArgoCD Applications (app-of-apps pattern) + Image Updater config
-- **`monitoring/`** — VictoriaMetrics + VictoriaLogs + Vector + Grafana (kustomize)
+- **`apps/registry/`** — Helm chart for the in-cluster local Docker registry
+- **`apps/arc-runners/`** — Helm wrapper for manually managed ARC runner secrets
+- **`argocd/`** — app-of-apps root, per-app Argo Applications, Image Updater config, ARC and observability app definitions
 - **`scripts/bootstrap.sh`** — One-time cluster setup (ArgoCD, Image Updater)
+- **`scripts/test-integration.sh`** — local render/apply smoke validation for charts and Argo manifests
 
 ## How It Works
 
@@ -68,6 +69,9 @@ See [`docs/setup.md`](docs/setup.md) for the full list of secrets per namespace.
 ### Useful commands
 
 ```bash
+# Validate Helm + Argo manifests locally
+./scripts/test-integration.sh
+
 # Check what's deployed
 kubectl -n argocd get applications
 
@@ -87,6 +91,9 @@ kubectl -n monitoring port-forward svc/grafana 3000:3000
 ```bash
 # Prerequisites: kubectl pointed at your cluster
 ./scripts/bootstrap.sh
+
+# Local validation
+./scripts/test-integration.sh
 ```
 
 See [`docs/setup.md`](docs/setup.md) for the full guide.
