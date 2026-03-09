@@ -25,12 +25,12 @@ backend:
   env:
     host: "0.0.0.0"
     pollIntervalSeconds: "5"
-    maxWorkers: "1"
+    maxWorkers: "2"
     enableLocalTranscription: "false"
 
 worker:
   enabled: true
-  replicas: 1
+  replicas: 2
   port: 3001
   tolerations:
     - key: "dedicated"
@@ -46,6 +46,12 @@ worker:
                 operator: In
                 values:
                   - gpu-node
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: cassandra-yt-mcp-worker
+          topologyKey: kubernetes.io/hostname
   resources:
     requests:
       cpu: "1"
