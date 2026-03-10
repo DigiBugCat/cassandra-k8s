@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Cassandra k8s — One-time cluster bootstrap
-# Installs ArgoCD and Image Updater, then applies the app-of-apps.
+# Installs ArgoCD, then applies the app-of-apps.
 #
 # Prerequisites:
 #   - k3s cluster running
@@ -36,35 +36,18 @@ kubectl -n argocd patch configmap argocd-cm --type merge -p '{"data":{"timeout.r
 echo "ArgoCD installed (30s reconciliation interval, OCI Helm enabled)."
 echo ""
 
-# 2. Install ArgoCD Image Updater
-echo "--- Installing ArgoCD Image Updater ---"
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/stable/manifests/install.yaml
-echo "Waiting for Image Updater to be ready..."
-kubectl -n argocd wait --for=condition=available --timeout=60s deployment/argocd-image-updater
-# Poll registry every 30s instead of default 2min — faster deploys
-kubectl -n argocd patch deploy argocd-image-updater --type=json \
-  -p '[{"op":"replace","path":"/spec/template/spec/containers/0/args","value":["run","--interval","30s"]}]'
-echo "Image Updater installed (30s poll interval)."
-echo ""
-
-# 3. Apply Image Updater registry config
-echo "--- Applying Image Updater config ---"
-kubectl apply -f "$REPO_DIR/argocd/image-updater.yaml"
-kubectl -n argocd rollout restart deployment/argocd-image-updater
-echo ""
-
-# 4. Connect this repo to ArgoCD
+# 2. Connect this repo to ArgoCD
 echo "--- Connecting k8s repo ---"
 echo "If the repo is private, run:"
 echo "  argocd repo add https://github.com/DigiBugCat/cassandra-k8s.git --username git --password <PAT>"
 echo ""
 
-# 5. Apply the app-of-apps
+# 3. Apply the app-of-apps
 echo "--- Applying app-of-apps ---"
 kubectl apply -f "$REPO_DIR/argocd/app-of-apps.yaml"
 echo ""
 
-# 6. Print status and next steps
+# 4. Print status and next steps
 echo "=== Bootstrap Complete ==="
 echo ""
 echo "ArgoCD UI:"

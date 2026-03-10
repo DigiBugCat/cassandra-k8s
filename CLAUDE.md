@@ -4,7 +4,7 @@
 
 k8s deployment repo for all Cassandra services. ArgoCD watches this repo and auto-applies changes. Helm charts for app workloads.
 
-**This repo contains only deployment manifests.** Application code lives in separate repos — their CI pipelines build and push images to the local registry (`172.20.0.161:30500`). ArgoCD Image Updater detects new tags and triggers rollouts.
+**This repo contains only deployment manifests.** Application code lives in separate repos — their CI pipelines build and push `latest` images to the local registry (`172.20.0.161:30500`). ArgoCD syncs Helm charts that use `latest` with `pullPolicy: Always`.
 
 ## Repo Structure
 
@@ -25,7 +25,6 @@ cassandra-k8s/
 │   └── arc-runners/                # Helm wrapper for ARC runner secrets
 ├── argocd/
 │   ├── app-of-apps.yaml            # Root Application
-│   ├── image-updater.yaml          # Local registry config
 │   └── apps/                       # Per-env ArgoCD Applications
 │       ├── claude-runner-dev.yaml
 │       ├── claude-runner-production.yaml
@@ -56,8 +55,8 @@ Same Helm chart, different value files, different namespaces. Both deployed to t
 
 ```
 Push code to claude-agent-runner / cassandra-yt-mcp
-  → GitHub CI: test → build → push to local registry (172.20.0.161:30500)
-  → ArgoCD Image Updater: detects new tag → auto-syncs deployments
+  → GitHub CI: test → build → push :latest to local registry (172.20.0.161:30500)
+  → Restart orchestrator or wait for next pod creation to pick up new image
 
 Push manifest change to cassandra-k8s
   → ArgoCD: detects git change → auto-syncs both environments

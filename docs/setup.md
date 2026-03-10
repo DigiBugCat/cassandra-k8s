@@ -17,7 +17,7 @@ Local machine (kubectl) → pantainos k3s cluster
 ```
 
 - **Images**: Built by ARC runners, pushed to local registry (`172.20.0.161:30500`)
-- **Deploys**: ArgoCD Image Updater detects new tags → auto-syncs deployments
+- **Deploys**: All images use `:latest` with `pullPolicy: Always` — pods pick up new images on creation
 - **GPU nodes**: callsonballz (172.20.2.32) and will (172.20.2.33) — both WSL2 bridged networking, RTX 5080. Label `role=gpu-node`, taint `dedicated=gpu-node:NoSchedule`
 
 ## Secrets
@@ -78,9 +78,9 @@ kubectl -n <namespace> annotate secret <name> \
 ### Code changes (application repos)
 
 1. Push to `main` in `claude-agent-runner` or `cassandra-yt-mcp`
-2. ARC runners build images, push to local registry (`172.20.0.161:30500`)
-3. ArgoCD Image Updater detects new tag → auto-syncs
-4. Pods restart with new image
+2. ARC runners build images, push `:latest` to local registry (`172.20.0.161:30500`)
+3. New pods pull the updated `:latest` image (`pullPolicy: Always`)
+4. To force a rollout: `kubectl -n <ns> rollout restart deployment/<name>`
 
 ### Manifest changes (this repo)
 
@@ -127,9 +127,18 @@ kubectl -n argocd patch application <app-name> --type merge \
   -p '{"operation":{"sync":{"revision":"HEAD","prune":true}}}'
 ```
 
-### Image Updater not detecting new images
+### Debugging with pinned image tags
+
+For debugging, temporarily pin an image to a specific git-sha tag:
 
 ```bash
-# Check Image Updater logs
-kubectl -n argocd logs -l app.kubernetes.io/name=argocd-image-updater -f
+# Override the tag for a specific deployment
+kubectl -n claude-runner set image deployment/claude-orchestrator \
+  orchestrator=172.20.0.161:30500/claude-agent-runner/orchestrator:main-<sha>
+
+# Revert to latest when done
+kubectl -n claude-runner set image deployment/claude-orchestrator \
+  orchestrator=172.20.0.161:30500/claude-agent-runner/orchestrator:latest
 ```
+
+CI pushes both `:latest` and `main-<sha>` tags, so any recent commit sha is available for pinning.

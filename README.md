@@ -10,16 +10,16 @@ Kubernetes deployment manifests for the [Cassandra](https://github.com/DigiBugCa
 - **`apps/cassandra-yt-mcp/`** — Helm chart for the GPU transcription backend
 - **`apps/registry/`** — Helm chart for the in-cluster local Docker registry
 - **`apps/arc-runners/`** — Helm wrapper for manually managed ARC runner secrets
-- **`argocd/`** — app-of-apps root, per-app Argo Applications, Image Updater config, ARC and observability app definitions
-- **`scripts/bootstrap.sh`** — One-time cluster setup (ArgoCD, Image Updater)
+- **`argocd/`** — app-of-apps root, per-app Argo Applications, ARC and observability app definitions
+- **`scripts/bootstrap.sh`** — One-time cluster setup (ArgoCD)
 - **`scripts/test-integration.sh`** — local render/apply smoke validation for charts and Argo manifests
 
 ## How It Works
 
 ```
 Push code to claude-agent-runner / cassandra-yt-mcp
-  → ARC runners: test → build → push to local registry
-  → ArgoCD Image Updater: detects new tag → updates deployments
+  → ARC runners: test → build → push :latest to local registry
+  → Pods pick up new image on next creation (pullPolicy: Always)
 
 Push manifest change to this repo
   → ArgoCD: detects git change → auto-syncs
@@ -40,7 +40,7 @@ Everything is GitOps — push to `main` and ArgoCD handles the rest.
 
 ### Code changes (app updates)
 
-Push to `main` in [claude-agent-runner](https://github.com/DigiBugCat/claude-agent-runner) or [cassandra-yt-mcp](https://github.com/DigiBugCat/cassandra-yt-mcp). ARC runners build Docker images → push to local registry (`172.20.0.161:30500`) → ArgoCD Image Updater detects new tags → rolls out automatically.
+Push to `main` in [claude-agent-runner](https://github.com/DigiBugCat/claude-agent-runner) or [cassandra-yt-mcp](https://github.com/DigiBugCat/cassandra-yt-mcp). ARC runners build Docker images → push `:latest` to local registry (`172.20.0.161:30500`). Pods pick up the new image on next creation (`pullPolicy: Always`). To force a rollout, restart the orchestrator deployment.
 
 ### Config changes (k8s manifests)
 
