@@ -106,6 +106,51 @@ spec:
               path: /healthz
               port: http
             periodSeconds: 30
+        {{- if .Values.downloader.enabled }}
+        - name: downloader
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: dl-health
+              containerPort: {{ .Values.downloader.port }}
+          env:
+            - name: ROLE
+              value: "downloader"
+            - name: HOST
+              value: "0.0.0.0"
+            - name: DOWNLOADER_PORT
+              value: {{ .Values.downloader.port | quote }}
+            - name: DATA_DIR
+              value: /data
+            - name: DATABASE_PATH
+              value: /data/cassandra_yt_mcp.sqlite3
+            - name: POLL_INTERVAL_SECONDS
+              value: {{ .Values.backend.env.pollIntervalSeconds | quote }}
+            - name: DOWNLOAD_CONCURRENCY
+              value: {{ .Values.downloader.downloadConcurrency | quote }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            {{- toYaml .Values.downloader.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: dl-health
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: dl-health
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: dl-health
+            periodSeconds: 30
+        {{- end }}
         {{- if .Values.cloudflaredTunnel.enabled }}
         - name: cloudflared
           image: {{ .Values.cloudflaredTunnel.image }}

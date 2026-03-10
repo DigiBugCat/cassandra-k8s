@@ -28,6 +28,18 @@ backend:
     maxWorkers: "2"
     enableLocalTranscription: "false"
 
+downloader:
+  enabled: true
+  port: 3002
+  downloadConcurrency: 2
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "1"
+      memory: "512Mi"
+
 worker:
   enabled: true
   replicas: 2
