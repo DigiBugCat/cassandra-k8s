@@ -3,17 +3,6 @@ kind: Application
 metadata:
   name: cassandra-yt-mcp
   namespace: argocd
-  annotations:
-    argocd-image-updater.argoproj.io/image-list: >-
-      coordinator=172.20.0.161:30500/cassandra-yt-mcp/coordinator,
-      worker=172.20.0.161:30500/cassandra-yt-mcp/backend
-    argocd-image-updater.argoproj.io/coordinator.update-strategy: newest-build
-    argocd-image-updater.argoproj.io/coordinator.helm.image-name: image.repository
-    argocd-image-updater.argoproj.io/coordinator.helm.image-tag: image.tag
-    argocd-image-updater.argoproj.io/worker.update-strategy: newest-build
-    argocd-image-updater.argoproj.io/worker.helm.image-name: workerImage.repository
-    argocd-image-updater.argoproj.io/worker.helm.image-tag: workerImage.tag
-    argocd-image-updater.argoproj.io/write-back-method: argocd
 spec:
   project: default
   source:
