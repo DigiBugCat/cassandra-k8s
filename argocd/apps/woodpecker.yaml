@@ -61,7 +61,7 @@ spec:
             WOODPECKER_BACKEND_K8S_POD_LABELS: ""
             WOODPECKER_BACKEND_K8S_POD_ANNOTATIONS: ""
           extraSecretNamesForEnvFrom:
-            - woodpecker-agent-secret
+            - woodpecker-default-agent-secret
           resources:
             requests:
               cpu: "100m"
