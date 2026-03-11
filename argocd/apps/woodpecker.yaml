@@ -31,7 +31,7 @@ spec:
                   key: WOODPECKER_GITHUB_SECRET
             WOODPECKER_HOST: "https://ci.cassandrasedge.com"
             WOODPECKER_ADMIN: "DigiBugCat"
-            WOODPECKER_OPEN: "false"
+            WOODPECKER_OPEN: "true"
             WOODPECKER_WEBHOOK_HOST: "https://ci.cassandrasedge.com"
           persistentVolume:
             enabled: true
