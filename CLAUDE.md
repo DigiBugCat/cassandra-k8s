@@ -22,7 +22,6 @@ cassandra-k8s/
 │       ├── values.yaml
 │       └── templates/
 │   ├── registry/                   # Helm chart — local Docker registry
-│   └── arc-runners/                # Helm wrapper for ARC runner secrets
 ├── argocd/
 │   ├── app-of-apps.yaml            # Root Application
 │   └── apps/                       # Per-env ArgoCD Applications
@@ -30,9 +29,7 @@ cassandra-k8s/
 │       ├── claude-runner-production.yaml
 │       ├── cassandra-yt-mcp.yaml
 │       ├── registry.yaml
-│       ├── arc-controller.yaml
-│       ├── arc-runner-scale-set-*.yaml
-│       ├── arc-runner-secrets.yaml
+│       ├── woodpecker.yaml         # Woodpecker CI (server + agent)
 │       ├── vm-k8s-stack.yaml
 │       └── observability-dashboards.yaml
 ├── scripts/
@@ -55,7 +52,7 @@ Same Helm chart, different value files, different namespaces. Both deployed to t
 
 ```
 Push code to claude-agent-runner / cassandra-yt-mcp
-  → GitHub CI: test → build → push :latest to local registry (172.20.0.161:30500)
+  → Woodpecker CI: test → build → push :latest to local registry (172.20.0.161:30500)
   → Restart orchestrator or wait for next pod creation to pick up new image
 
 Push manifest change to cassandra-k8s
@@ -101,10 +98,9 @@ kubectl create secret generic git-tokens --namespace claude-runner-dev \
 ```bash
 kubectl create secret generic cassandra-yt-mcp-backend --namespace cassandra-yt-mcp \
   --from-literal=BACKEND_API_TOKEN=<token>
-
-kubectl create secret generic cloudflare-tunnel --namespace cassandra-yt-mcp \
-  --from-literal=token=<tunnel-token>
 ```
+
+Note: yt-mcp-api traffic is routed through the single CF tunnel (cloudflared in claude-runner namespace). No separate tunnel secret needed here.
 
 ## Commands
 

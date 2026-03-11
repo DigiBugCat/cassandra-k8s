@@ -311,38 +311,6 @@ spec:
                       hostPath:
                         path: /var/lib/vector
 
-          # --- VMPodScrape: ARC controller manager ---
-          - apiVersion: operator.victoriametrics.com/v1beta1
-            kind: VMPodScrape
-            metadata:
-              name: arc-controller
-              namespace: monitoring
-            spec:
-              namespaceSelector:
-                matchNames: [arc-systems]
-              selector:
-                matchLabels:
-                  app.kubernetes.io/component: controller-manager
-                  app.kubernetes.io/name: gha-rs-controller
-              podMetricsEndpoints:
-                - port: "8080"
-                  path: /metrics
-
-          # --- VMPodScrape: ARC listener pods ---
-          - apiVersion: operator.victoriametrics.com/v1beta1
-            kind: VMPodScrape
-            metadata:
-              name: arc-listeners
-              namespace: monitoring
-            spec:
-              namespaceSelector:
-                matchNames: [arc-systems]
-              selector:
-                matchLabels:
-                  app.kubernetes.io/component: runner-scale-set-listener
-              podMetricsEndpoints:
-                - port: "8080"
-                  path: /metrics
 
   destination:
     server: https://kubernetes.default.svc

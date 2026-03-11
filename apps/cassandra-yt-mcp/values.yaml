@@ -88,13 +88,7 @@ service:
   type: ClusterIP
   port: 3000
 
+# cloudflared sidecar disabled — yt-mcp-api is routed through the single
+# runner tunnel (cloudflared pod in claude-runner namespace).
 cloudflaredTunnel:
-  enabled: true
-  image: cloudflare/cloudflared:2026.2.0
-  resources:
-    requests:
-      cpu: "50m"
-      memory: "64Mi"
-    limits:
-      cpu: "200m"
-      memory: "128Mi"
+  enabled: false

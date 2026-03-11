@@ -1,0 +1,88 @@
+# Woodpecker CI — self-hosted CI/CD replacing GitHub Actions + ARC.
+# Installed from upstream OCI chart. Server + agent in one namespace.
+# Agent uses Kubernetes backend to spawn pipeline pods.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: woodpecker
+  namespace: argocd
+spec:
+  project: default
+  source:
+    chart: woodpecker
+    repoURL: ghcr.io/woodpecker-ci/helm
+    targetRevision: 3.5.1
+    helm:
+      releaseName: woodpecker
+      valuesObject:
+        server:
+          enabled: true
+          env:
+            WOODPECKER_GITHUB: "true"
+            WOODPECKER_GITHUB_CLIENT:
+              valueFrom:
+                secretKeyRef:
+                  name: woodpecker-github
+                  key: WOODPECKER_GITHUB_CLIENT
+            WOODPECKER_GITHUB_SECRET:
+              valueFrom:
+                secretKeyRef:
+                  name: woodpecker-github
+                  key: WOODPECKER_GITHUB_SECRET
+            WOODPECKER_HOST: "https://ci.cassandrasedge.com"
+            WOODPECKER_ADMIN: "DigiBugCat"
+            WOODPECKER_OPEN: "false"
+            WOODPECKER_WEBHOOK_HOST: "https://ci.cassandrasedge.com"
+          persistentVolume:
+            enabled: true
+            size: 10Gi
+            storageClass: ""
+          service:
+            type: ClusterIP
+            port: 80
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+        agent:
+          enabled: true
+          replicaCount: 1
+          env:
+            WOODPECKER_SERVER: "woodpecker-server:9000"
+            WOODPECKER_BACKEND: kubernetes
+            WOODPECKER_BACKEND_K8S_NAMESPACE: woodpecker
+            WOODPECKER_BACKEND_K8S_STORAGE_CLASS: ""
+            WOODPECKER_BACKEND_K8S_VOLUME_SIZE: 5G
+            WOODPECKER_BACKEND_K8S_STORAGE_RWX: "true"
+            WOODPECKER_BACKEND_K8S_POD_LABELS: ""
+            WOODPECKER_BACKEND_K8S_POD_ANNOTATIONS: ""
+          extraSecretNamesForEnvFrom:
+            - woodpecker-agent-secret
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: woodpecker
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
