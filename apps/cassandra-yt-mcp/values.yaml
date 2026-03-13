@@ -75,10 +75,10 @@ worker:
   resources:
     requests:
       cpu: "1"
-      memory: "4Gi"
+      memory: "8Gi"
     limits:
       cpu: "4"
-      memory: "8Gi"
+      memory: "12Gi"
       nvidia.com/gpu: 1
 
 persistence:
