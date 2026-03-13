@@ -5,8 +5,9 @@ image:
   pullSecrets: []
 
 workerImage:
-  repository: 172.20.0.161:30500/cassandra-yt-mcp/backend
+  repository: 172.20.0.161:30500/cassandra-yt-mcp/backend-onnx
   tag: latest
+  # NeMo fallback: 172.20.0.161:30500/cassandra-yt-mcp/backend
 
 backend:
   replicas: 1
@@ -72,13 +73,14 @@ worker:
             matchLabels:
               app: cassandra-yt-mcp-worker
           topologyKey: kubernetes.io/hostname
+  transcriptionEngine: "onnx"
   resources:
     requests:
       cpu: "1"
-      memory: "8Gi"
+      memory: "2Gi"
     limits:
       cpu: "4"
-      memory: "12Gi"
+      memory: "8Gi"
       nvidia.com/gpu: 1
 
 persistence:

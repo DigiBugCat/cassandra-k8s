@@ -53,6 +53,8 @@ spec:
               value: {{ .Values.worker.port | quote }}
             - name: ENABLE_LOCAL_TRANSCRIPTION
               value: "true"
+            - name: TRANSCRIPTION_ENGINE
+              value: {{ .Values.worker.transcriptionEngine | default "onnx" | quote }}
             - name: HUGGINGFACE_TOKEN
               valueFrom:
                 secretKeyRef:
