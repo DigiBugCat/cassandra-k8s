@@ -38,11 +38,11 @@ downloader:
       memory: "256Mi"
     limits:
       cpu: "1"
-      memory: "512Mi"
+      memory: "1Gi"
 
 worker:
   enabled: true
-  replicas: 2
+  replicas: 1
   port: 3001
   tolerations:
     - key: "dedicated"
