@@ -48,6 +48,8 @@ spec:
             exec:
               command:
                 - buildctl
+                - --addr
+                - tcp://127.0.0.1:1234
                 - debug
                 - workers
             initialDelaySeconds: 5
