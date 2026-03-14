@@ -75,11 +75,11 @@ worker:
   transcriptionEngine: "nemo"
   resources:
     requests:
-      cpu: "1"
-      memory: "2Gi"
+      cpu: "2"
+      memory: "12Gi"
     limits:
-      cpu: "4"
-      memory: "8Gi"
+      cpu: "8"
+      memory: "16Gi"
       nvidia.com/gpu: 1
 
 persistence:
