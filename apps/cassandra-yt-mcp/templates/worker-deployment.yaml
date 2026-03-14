@@ -80,4 +80,6 @@ spec:
               path: /worker/healthz
               port: http
             periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 40
 {{- end }}
