@@ -8,7 +8,7 @@ port: 5000
 nodePort: 30500
 
 storage:
-  hostPath: /mnt/raid1/registry
+  hostPath: /mnt/scratch/registry
 
 resources:
   requests:
