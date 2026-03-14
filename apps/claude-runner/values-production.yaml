@@ -38,7 +38,7 @@ obsidian:
   enabled: true
 
 cloudflaredTunnel:
-  enabled: true
+  enabled: false  # standalone deployment pinned to dell-server
 
 tenants:
   enabled: true
