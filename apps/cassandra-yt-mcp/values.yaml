@@ -5,9 +5,8 @@ image:
   pullSecrets: []
 
 workerImage:
-  repository: 172.20.0.161:30500/cassandra-yt-mcp/backend-onnx
+  repository: 172.20.0.161:30500/cassandra-yt-mcp/backend
   tag: latest
-  # NeMo fallback: 172.20.0.161:30500/cassandra-yt-mcp/backend
 
 backend:
   replicas: 1
@@ -73,7 +72,7 @@ worker:
             matchLabels:
               app: cassandra-yt-mcp-worker
           topologyKey: kubernetes.io/hostname
-  transcriptionEngine: "onnx"
+  transcriptionEngine: "nemo"
   resources:
     requests:
       cpu: "1"
