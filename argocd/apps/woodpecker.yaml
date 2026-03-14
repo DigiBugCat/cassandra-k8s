@@ -17,8 +17,6 @@ spec:
       valuesObject:
         server:
           enabled: true
-          nodeSelector:
-            role: control-plane-workloads
           env:
             WOODPECKER_GITHUB: "true"
             WOODPECKER_GITHUB_CLIENT:
