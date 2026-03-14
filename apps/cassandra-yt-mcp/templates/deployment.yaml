@@ -84,12 +84,6 @@ spec:
                   name: cassandra-yt-mcp-backend
                   key: BACKEND_API_TOKEN
                   optional: true
-            - name: YTDLP_COOKIES
-              valueFrom:
-                secretKeyRef:
-                  name: cassandra-yt-mcp-backend
-                  key: YTDLP_COOKIES
-                  optional: true
           volumeMounts:
             - name: data
               mountPath: /data
@@ -134,12 +128,6 @@ spec:
               value: {{ .Values.backend.env.pollIntervalSeconds | quote }}
             - name: DOWNLOAD_CONCURRENCY
               value: {{ .Values.downloader.downloadConcurrency | quote }}
-            - name: YTDLP_COOKIES
-              valueFrom:
-                secretKeyRef:
-                  name: cassandra-yt-mcp-backend
-                  key: YTDLP_COOKIES
-                  optional: true
           volumeMounts:
             - name: data
               mountPath: /data
