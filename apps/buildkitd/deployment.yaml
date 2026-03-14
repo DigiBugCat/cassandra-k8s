@@ -45,21 +45,13 @@ spec:
             - containerPort: 1234
               protocol: TCP
           readinessProbe:
-            exec:
-              command:
-                - buildctl
-                - --addr
-                - tcp://127.0.0.1:1234
-                - debug
-                - workers
-            initialDelaySeconds: 5
-            periodSeconds: 30
+            tcpSocket:
+              port: 1234
+            initialDelaySeconds: 3
+            periodSeconds: 10
           livenessProbe:
-            exec:
-              command:
-                - buildctl
-                - debug
-                - workers
+            tcpSocket:
+              port: 1234
             initialDelaySeconds: 5
             periodSeconds: 30
           securityContext:
